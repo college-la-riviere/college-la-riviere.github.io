@@ -270,6 +270,8 @@
   #auth .msg{min-height:20px;font-size:14px;text-align:center;color:#ffd0d8}
   #auth .msg.ok{color:#bff0d3}
   #auth .lnk{background:none;border:0;color:#fff;text-decoration:underline;font:500 14px Outfit,sans-serif;cursor:pointer;padding:6px}
+  #auth .apk{display:block;text-align:center;margin-top:6px;padding:13px;border-radius:16px;border:1.5px solid rgba(255,255,255,.35);color:#fff;text-decoration:none;font:600 15px Outfit,sans-serif}
+  #auth .apk[hidden]{display:none}
   #auth .note{font-size:12.5px;color:rgba(255,255,255,.6);text-align:center}
   .clr-acc{display:flex;align-items:center;gap:12px;margin:18px 0 6px;padding:14px 16px;border-radius:18px;background:var(--surface,#22060f);border:1px solid var(--line,#3d0e1d);color:var(--ink,#fff);font-family:var(--f-b,Outfit,sans-serif)}
   .clr-acc span{flex:1;min-width:0;font-size:14px;line-height:1.35}.clr-acc small{display:block;color:var(--muted,rgba(255,255,255,.7))}
@@ -298,10 +300,16 @@
       <p class="note">Mot de passe oublié : refaites cette étape avec le même téléphone et votre code ; le nouveau mot de passe remplace l’ancien.</p>
     </form>
     <div class="msg" id="a-msg" role="status"></div>
+    <a class="apk" id="a-apk" href="college-la-riviere.apk" download hidden>⬇ Télécharger l’application Android</a>
   </div>`;
   const mount = () => document.body.appendChild(box);
   document.body ? mount() : document.addEventListener('DOMContentLoaded', mount);
   const $a = s => box.querySelector(s);
+  // Bouton d'installation : seulement sur Android, dans le navigateur (pas dans l'application déjà installée)
+  try {
+    const installed = matchMedia('(display-mode: standalone)').matches || document.referrer.startsWith('android-app://');
+    if (/Android/i.test(navigator.userAgent) && !installed) $a('#a-apk').hidden = false;
+  } catch (e) {}
   const msg = (t, ok) => { const m = $a('#a-msg'); m.textContent = t || ''; m.className = 'msg' + (ok ? ' ok' : ''); };
   function tab(t) {
     box.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));

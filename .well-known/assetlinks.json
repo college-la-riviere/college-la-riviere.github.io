@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "cd.collegelariviere.app",
+        "sha256_cert_fingerprints": ["29:94:55:5C:0B:F8:83:96:BE:C1:4F:D9:C1:88:0C:40:6C:EB:9F:F5:6F:1A:05:74:6A:AE:A6:65:66:21:99:D7"]
+      }
+    }]
