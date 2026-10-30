@@ -1,7 +1,7 @@
 // Collège La Rivière — assistant de rédaction IA (fonction Supabase « ecole-ia »)
 // Utilisé pour corriger et reformuler les consignes aux parents et les observations de conduite.
 // Secret nécessaire : GEMINI_API_KEY (Edge Functions › Secrets). Facultatif : GEMINI_MODEL.
-// À déployer AVEC vérification JWT (option « Verify JWT » activée) : seuls les membres connectés l'utilisent.
+// Déployée sans « Verify JWT » : la fonction vérifie elle-même que la personne est connectée et membre de l’école.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const cors = {

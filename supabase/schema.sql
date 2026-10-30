@@ -1,6 +1,6 @@
 -- =====================================================================
 --  Collège La Rivière — base de données (Supabase / Postgres)
---  À exécuter UNE fois dans Supabase › SQL Editor (projet college-la-riviere).
+--  UN SEUL fichier à exécuter dans Supabase › SQL Editor (projet college-la-riviere).
 --  Peut être exécuté plusieurs fois sans danger.
 -- =====================================================================
 
@@ -214,3 +214,22 @@ revoke all on public.ecole_codes, public.ecole_usage from authenticated;
 grant select on public.ecole_schools to authenticated;
 grant select, delete on public.ecole_members to authenticated;
 grant select, insert, update, delete on public.ecole_docs to authenticated;
+
+-- ---------------------------------------------------------------------
+--  Démarrage : l'école (code CLR) et le compte du directeur.
+--  Tout le reste (classes, enseignants, élèves, photos) se crée dans l'application.
+-- ---------------------------------------------------------------------
+insert into public.ecole_schools(name, code) values ('Collège La Rivière', 'CLR')
+on conflict (code) do nothing;
+
+with s as (select id from public.ecole_schools where code = 'CLR')
+insert into public.ecole_docs(school_id, col, id, data)
+select s.id, 'inscriptions', 'p-directeur',
+  '{"nom":"MASUNDA FUTU Chrimos","role":"gestionnaire","matiere":"Directeur","prepare":true,"sexe":"M","hasCode":true}'::jsonb
+from s
+on conflict (school_id, col, id) do nothing;
+
+with s as (select id from public.ecole_schools where code = 'CLR')
+insert into public.ecole_codes(school_id, profile_id, code)
+select s.id, 'p-directeur', '1561' from s
+on conflict (school_id, profile_id) do nothing;
