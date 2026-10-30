@@ -251,36 +251,36 @@
   /* ---------- Écran de connexion ---------- */
   const css = `
   #auth{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:20px;overflow:auto;
-    background:radial-gradient(circle at 25% 15%,#921733 0%,#5c0f21 40%,#14030a 100%);color:#fff;font-family:Outfit,system-ui,sans-serif}
+    background:radial-gradient(circle at 25% 15%,#533989 0%,#3a1e72 40%,#0f0820 100%);color:#fff;font-family:Outfit,system-ui,sans-serif}
   #auth[hidden]{display:none!important}
   #auth .box{width:100%;max-width:380px;display:flex;flex-direction:column;gap:14px}
-  #auth .lg{width:92px;height:92px;border-radius:28px;margin:0 auto 4px;box-shadow:0 12px 30px rgba(0,0,0,.4)}
+  #auth .lg{width:112px;height:112px;margin:0 auto -4px;filter:drop-shadow(0 12px 22px rgba(0,0,0,.4))}
   #auth h1{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:30px;letter-spacing:.5px;margin:0;text-align:center}
   #auth p{margin:0;text-align:center;color:rgba(255,255,255,.78);font-size:14.5px;line-height:1.45}
   #auth .tabs{display:grid;grid-template-columns:1fr 1fr;background:rgba(0,0,0,.28);border-radius:16px;padding:4px}
   #auth .tabs button{border:0;background:none;color:#fff;font:600 14.5px Outfit,sans-serif;padding:11px;border-radius:12px;cursor:pointer}
-  #auth .tabs button.on{background:#fff;color:#5c0f21}
+  #auth .tabs button.on{background:#fff;color:#3a1e72}
   #auth form{display:flex;flex-direction:column;gap:11px}
   #auth label{font-size:13px;font-weight:600;color:rgba(255,255,255,.8);display:flex;flex-direction:column;gap:6px}
   #auth input{font:500 17px Outfit,sans-serif;padding:14px 15px;border-radius:14px;border:1.5px solid rgba(255,255,255,.22);background:rgba(0,0,0,.25);color:#fff;outline:none;width:100%;box-sizing:border-box}
   #auth input:focus{border-color:#fff}
   #auth input.code{letter-spacing:.45em;text-align:center;font-weight:800;font-size:22px}
-  #auth .go{border:0;border-radius:16px;padding:15px;font:700 16px Outfit,sans-serif;background:#fff;color:#5c0f21;cursor:pointer;margin-top:4px}
+  #auth .go{border:0;border-radius:16px;padding:15px;font:700 16px Outfit,sans-serif;background:#fff;color:#3a1e72;cursor:pointer;margin-top:4px}
   #auth .go:disabled{opacity:.6}
-  #auth .msg{min-height:20px;font-size:14px;text-align:center;color:#ffd0d8}
+  #auth .msg{min-height:20px;font-size:14px;text-align:center;color:#e2d6fb}
   #auth .msg.ok{color:#bff0d3}
   #auth .lnk{background:none;border:0;color:#fff;text-decoration:underline;font:500 14px Outfit,sans-serif;cursor:pointer;padding:6px}
   #auth .apk{display:block;text-align:center;margin-top:6px;padding:13px;border-radius:16px;border:1.5px solid rgba(255,255,255,.35);color:#fff;text-decoration:none;font:600 15px Outfit,sans-serif}
   #auth .apk[hidden]{display:none}
   #auth .note{font-size:12.5px;color:rgba(255,255,255,.6);text-align:center}
-  .clr-acc{display:flex;align-items:center;gap:12px;margin:18px 0 6px;padding:14px 16px;border-radius:18px;background:var(--surface,#22060f);border:1px solid var(--line,#3d0e1d);color:var(--ink,#fff);font-family:var(--f-b,Outfit,sans-serif)}
+  .clr-acc{display:flex;align-items:center;gap:12px;margin:18px 0 6px;padding:14px 16px;border-radius:18px;background:var(--surface,#1a1033);border:1px solid var(--line,#2e1d55);color:var(--ink,#fff);font-family:var(--f-b,Outfit,sans-serif)}
   .clr-acc span{flex:1;min-width:0;font-size:14px;line-height:1.35}.clr-acc small{display:block;color:var(--muted,rgba(255,255,255,.7))}
-  .clr-acc button{border:1px solid var(--line,#3d0e1d);background:transparent;color:inherit;font:600 14px var(--f-b,Outfit,sans-serif);padding:10px 14px;border-radius:12px;cursor:pointer}`;
+  .clr-acc button{border:1px solid var(--line,#2e1d55);background:transparent;color:inherit;font:600 14px var(--f-b,Outfit,sans-serif);padding:10px 14px;border-radius:12px;cursor:pointer}`;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
   const box = document.createElement('div'); box.id = 'auth'; box.hidden = true;
   box.innerHTML = `<div class="box">
-    <img class="lg" src="icon-192-v2.png" alt="">
+    <img class="lg" src="icon-192-v3.png" alt="">
     <h1>Collège La Rivière</h1>
     <p id="a-sub">Connectez-vous avec votre numéro de téléphone.</p>
     <div class="tabs" role="tablist"><button type="button" data-t="in" class="on">Se connecter</button><button type="button" data-t="up">Première fois</button></div>
