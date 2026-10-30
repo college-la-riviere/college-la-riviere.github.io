@@ -280,7 +280,7 @@
 
   const box = document.createElement('div'); box.id = 'auth'; box.hidden = true;
   box.innerHTML = `<div class="box">
-    <img class="lg" src="icon-192.png" alt="">
+    <img class="lg" src="icon-192-v2.png" alt="">
     <h1>Collège La Rivière</h1>
     <p id="a-sub">Connectez-vous avec votre numéro de téléphone.</p>
     <div class="tabs" role="tablist"><button type="button" data-t="in" class="on">Se connecter</button><button type="button" data-t="up">Première fois</button></div>
