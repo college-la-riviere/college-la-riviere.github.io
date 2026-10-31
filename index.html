@@ -502,8 +502,10 @@ table.t td.name,table.t th.name{text-align:left}
 
 /* ===== Profil enseignant : cartes sombres, ticket pêche à encoches ===== */
 .pf-page{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 120px;background:var(--bg)}
-.prof{--pb:#1d0f3d;--pc:#3d0a17;--pd:#3a1e72;--pk:#baa2eb;--pk2:#8363c6;--pi:#ece4fb;--pm:#c4b2ec;--po:#d3c3f5;
-  max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:16px;background:var(--pb);color:var(--pi);border-radius:34px;padding:16px;box-shadow:0 20px 50px rgba(12,6,28,.28)}
+.prof{--pb:#1d0f3d;--pc:#251448;--pd:#3a1e72;--pk:#baa2eb;--pk2:#8363c6;--pi:#ece4fb;--pm:#c4b2ec;--po:#d3c3f5;
+  display:flex;flex-direction:column;gap:16px;color:var(--pi)}
+.prof .pf-menu{padding:10px;gap:4px}.prof .pf-menu .li{border-radius:18px}
+.prof .pf-sec{background:var(--surface);border:1px solid var(--line)}
 .pf-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .pf-top b{font-family:var(--f-d);font-weight:400;font-size:22px;text-transform:uppercase;letter-spacing:.01em}
 .pf-ic{width:46px;height:46px;border-radius:16px;border:0;background:var(--pc);color:var(--pi);display:grid;place-items:center;cursor:pointer;flex:none}
@@ -1578,23 +1580,27 @@ function vProf(){
   const faits=sem.filter(d=>cid&&appelClos(cid,d)).length;
   const photo=p.photo?`<img src="${h(p.photo)}" alt="Photo de ${h(p.nom)}">`:`<span class="pf-ini">${h(initials({nom:p.nom}))}</span>`;
   const backV=S.pBack&&S.pBack!=='prof'?S.pBack:(isDir()?'gestion':'accueil');
-  return `<div class="pf-page"><div class="prof">
-   <header class="pf-top"><button class="pf-ic" data-act="go" data-v="${h(backV)}" aria-label="Retour">${ic('back',22)}</button><b>${isGest(p)?'Profil gestionnaire':'Profil enseignant'}</b>${isDir()?`<button class="pf-ic" data-act="ens" data-id="${h(p.id)}" aria-label="Modifier le profil">${ic('pen2',20)}</button>`:'<span class="pf-ic ghost"></span>'}</header>
-   ${S.demo?`<div class="pf-demo">${demoPill()}</div>`:''}
+  const tri=['t1','t2','t3'].map(t=>cid?Math.round(progression(cid,t)*100):0);
+  const mois=today().slice(0,7);const jm=[];{const d0=new Date(mois+'-01T00:00:00Z');while(iso(d0).slice(0,7)===mois&&iso(d0)<=td){const w=d0.getUTCDay();if(w>0&&w<6)jm.push(iso(d0));d0.setUTCDate(d0.getUTCDate()+1)}}
+  const sig=jm.filter(d=>S.presence[pid2(d,p.id)]).length;const sigAuj=S.presence[pid2(td,p.id)];
+  const row=(icn,ttl,sub,attrs,right='')=>attrs?`<button class="li actsum" ${attrs}><span class="ib g">${ic(icn,22)}</span><span class="grow"><span class="ttl" style="display:block">${ttl}</span><span class="muted small num">${sub}</span></span>${right}<span class="chev">${ic('chev',18)}</span></button>`:`<div class="li actsum"><span class="ib g">${ic(icn,22)}</span><span class="grow"><span class="ttl" style="display:block">${ttl}</span><span class="muted small num">${sub}</span></span>${right}</div>`;
+  const po=v=>`data-act="popen" data-id="${h(cid)}" data-v="${v}"`;
+  const presRow=row('users','Cahier de présence',`${sigAuj?`Signé aujourd’hui à ${hm(sigAuj.at)}`:'Pas encore signé aujourd’hui'} · ce mois : ${sig} / ${jm.length} jour${jm.length>1?'s':''}`,isDir()?'data-act="go" data-v="presence"':'');
+  const rows=isGest(p)?[row('grid','Toutes les classes',`${classIds().length} classes · registres, cotes et bulletins`,'data-act="go" data-v="classes"'),presRow,row('bell','Activité du jour','Appels et cotes clôturés, classe par classe','data-act="go" data-v="activite"'),row('admin','Administration','Classes, personnel, calendrier, sauvegarde','data-act="go" data-v="gestion"')]
+   :c?[row('chalk','Sa classe',`${h(c.nom)} · ${h(degLabel(c))}`,`data-act="open" data-id="${h(cid)}"`),row('check','Registre d’appel',`Cette semaine : ${faits} / 5 jours clôturés`,po('appel'),appelClos(cid,td)?'<span class="pill good">Clôturé</span>':''),presRow,row('book','Cahier de cotes',`Points encodés : T1 ${tri[0]} % · T2 ${tri[1]} % · T3 ${tri[2]} %`,po('cotes')),row('doc','Bulletins',`${es.length} bulletin${es.length>1?'s':''} officiels`,po('bul')),row('chart','Palmarès','Classement par période et signatures des parents',po('palm')),row('users','Élèves',`${es.length} élève${es.length>1?'s':''} · ${es.length-f} G, ${f} F`,po('eleves'))]:[presRow];
+  return band({back:backV,home:true,title:'Collège La Rivière',sub:`${isGest(p)?'Profil gestionnaire':'Profil enseignant'} · ${ANNEE}`,side:`<div class="band-anim">${LOGO_SVG}</div>`})+page(`<div class="prof">
    <section class="ticket">
     <span class="t-chip">${isGest(p)?ic('shield',16)+' Gestionnaire':ic('chalk',16)+' Enseignant titulaire'}</span>
     <div class="t-row"><div class="t-info"><small>Nom complet</small><h1>${h(p.nom)}</h1><span>${h(p.matiere||(c?'Titulaire '+c.nom:''))}</span></div><div class="t-photo">${photo}</div></div>
     <div class="t-cut" aria-hidden="true"></div>
     ${isGest(p)?`<div class="t-stats num gs"><div><small>Fonction</small><b>${h(p.matiere||'Gestion')}</b></div><div><small>Matricule</small><b>${h(p.matricule||'—')}</b></div><div><small>Classes</small><b>${classIds().length}</b></div></div>`:`<div class="t-stats num"><div><small>Classe</small><b>${c?h(short(c.nom)):'—'}</b></div><div><small>Élèves</small><b>${es.length}</b></div><div><small>Garçons / Filles</small><b>${es.length-f} / ${f}</b></div></div>`}
    </section>
-   ${isGest(p)?`<button class="pf-cta" data-act="go" data-v="classes"><span><small>Accès gestion</small><b>Toutes les classes</b><em>Suivi des registres, des cotes et des bulletins</em></span><i>Voir ${ic('chev',18)}</i></button>`:c?`<button class="pf-cta" data-act="open" data-id="${h(cid)}"><span><small>Sa classe</small><b>${h(c.nom)}</b><em>${h(degLabel(c))}</em></span><i>Ouvrir ${ic('chev',18)}</i></button>`
-      :`<div class="pf-card pf-empty">Aucune classe attribuée.${isDir()?` <button class="pf-btn" data-act="ens" data-id="${h(p.id)}">Attribuer une classe</button>`:''}</div>`}
+   ${!isGest(p)&&!c?`<div class="pf-card pf-empty">Aucune classe attribuée.${isDir()?` <button class="pf-btn" data-act="ens" data-id="${h(p.id)}">Attribuer une classe</button>`:''}</div>`:''}
+   <section class="card summary pf-menu">${rows.join('')}</section>
    ${c?`<section class="pf-sec"><div class="pf-h"><b>Appel de la semaine</b><span class="num">${faits} / 5 jours clôturés</span></div>
     <div class="pf-list">${sem.map(d=>{const j=jour(d);const ja=JR(cid,d);const clos=!!ja?.appel;const st=clos?'ok':d===td?'now':d<td?'miss':'next';const dd=D(d);
       const sub=clos?`Appel clôturé à ${hm(ja.appel.at)} · ${ja.appel.P} P · ${ja.appel.A} A${ja.cotes?` · cotes clôturées (${sum(ja.cotes.items.map(i=>i.eleves.length))})`:''}`:j.n?`${j.P} présent${j.P>1?'s':''} · ${j.A} absent${j.A>1?'s':''} · pas encore clôturé`:st==='now'?'Appel à faire et à clôturer aujourd’hui':st==='miss'?'Appel non fait':'À venir';
       return `<div class="pf-row ${st}"><span class="pf-day"><small>${JLONG[dd.getUTCDay()].slice(0,3)}</small><b>${dd.getUTCDate()}</b></span><span class="grow"><b>${JLONG[dd.getUTCDay()]} ${dfr(d)}</b><small>${sub}</small></span><span class="pf-chk">${clos?'✓':st==='now'?'•':''}</span></div>`}).join('')}</div></section>
-   <section class="pf-sec"><div class="pf-h"><b>Cahier de cotes</b><span>Points encodés</span></div>
-    <div class="pf-tris">${['t1','t2','t3'].map(t=>{const pr=progression(cid,t);return `<div class="pf-tri ${pr>=1?'done':''}"><div class="pf-ringw">${profRing(pr)}<b class="num">${Math.round(pr*100)}<small>%</small></b></div><b>${TRI[t]}</b><small>${PER[t].map(perLbl).join(' · ')} · Ex.</small></div>`}).join('')}</div></section>
    <section class="pf-sec"><div class="pf-h"><b>Ses élèves</b>${es.length?`<button class="pf-link" data-act="open-eleves" data-id="${h(cid)}">Voir tout</button>`:''}</div>
     ${es.length?`<div class="pf-kids">${es.map(e=>`<button class="pf-kid" data-act="eleve" data-id="${h(e.id)}"><span class="${e.sexe==='F'?'f':''}${e.photo?' hasph':''}">${e.photo?`<img src="${h(e.photo)}" alt="">`:h(initials(e))}</span><small>${h(e.prenom||e.nom)}</small></button>`).join('')}</div>`:`<div class="pf-card pf-empty">Aucun élève inscrit dans sa classe pour l’instant.</div>`}</section>`:''}
    <section class="pf-sec"><div class="pf-h"><b>Coordonnées</b></div>
@@ -1606,7 +1612,7 @@ function vProf(){
      <div class="pf-row ${linked?'ok':''}"><span class="pf-day ic">${ic('shield',20)}</span><span class="grow"><b>${linked?'Compte relié':'Compte pas encore relié'}</b><small>${linked?'L’enseignant utilise l’application avec son compte.':'À sa première ouverture, il touche son nom pour utiliser ce profil.'}</small></span>${linked?'<span class="pf-chk">✓</span>':''}</div>
     </div></section>
    ${isDir()?`<button class="pf-main" data-act="ens" data-id="${h(p.id)}">Modifier le profil</button>`:''}
-  </div></div>`;
+  </div>`);
 }
 
 const autoRegDone={};
@@ -2220,6 +2226,7 @@ const A={
   rcopy:b=>{const t=rapportTexte(S.rEl,S.pKey||'t1');const done=()=>toast('Message copié. Collez-le dans WhatsApp.');try{navigator.clipboard.writeText(t).then(done,()=>fallbackCopy(t))}catch(e){fallbackCopy(t)}},
   pday:b=>{S.pDate=b.dataset.v;S.pTab='jour';render();scrollTo(0,0)},
   ptab:b=>{S.pTab=b.dataset.v;render()},
+  popen:b=>{S.cid=b.dataset.id;S.ctab=b.dataset.v;S.sel='';S.view='classe';render();scrollTo(0,0)},
   amoisa:b=>{S.aMoisA=b.dataset.v;render()},
   ajour:b=>ajourSheet(S.cid,b.dataset.v),
   pmois:b=>{S.pMois=b.dataset.v;render()},
