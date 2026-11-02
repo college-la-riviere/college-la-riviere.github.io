@@ -1736,7 +1736,7 @@ function tabPalm(){
   if(vue==='sig')return `<div class="card pad stack">${seg}${chips}</div>`+tabSig();
   const {mx,MT,ranked}=palmData(cid,key);
   const moy=ranked.length?sum(ranked.map(r=>r.pct))/ranked.length:null,reu=ranked.filter(r=>r.pct>=50).length;const ns=es.filter(e=>sigOf(e.id,key)).length;
-  return `<div class="card pad stack">${seg}<div class="sec-h"><div><h2 class="h2">Palmarès</h2><span class="muted small">${h(cls.nom)} · ${h(keyName(key))}</span></div><button class="btn sm grad" data-act="palmfs">${ic('expand',16)} Plein écran</button></div>
+  return `<div class="card pad stack">${seg}<div class="sec-h"><div><h2 class="h2">Palmarès</h2><span class="muted small">${h(cls.nom)} · ${h(keyName(key))}</span></div><span class="btns"><button class="btn sm" data-act="palmpdf">${ic('doc',16)} PDF</button><button class="btn sm grad" data-act="palmfs">${ic('expand',16)} Plein écran</button></span></div>
    ${chips}
    <div class="pgroups">${GRP.map(([k,l])=>`<span><b>${l}</b> /${fmt(mx[k])}</span>`).join('')}<span class="t"><b>Total</b> /${fmt(MT)}</span></div>
    <span class="muted small num">${ranked.length} classé${ranked.length>1?'s':''} · ${reu} réussite${reu>1?'s':''} (≥ 50 %) · moy. ${pctf(moy)} · ${ns}/${es.length} parents ont signé</span></div>
@@ -1942,6 +1942,24 @@ function rapportTexte(eid,k){const R=rapportData(eid,k);const tot=R.P+R.A.length
 let libsP=null;
 function loadLibs(){if(libsP)return libsP;const ld=src=>new Promise((ok,ko)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=ko;document.head.appendChild(s)});
   libsP=Promise.all([ld('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'),ld('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')]).catch(e=>{libsP=null;throw e});return libsP}
+async function palmPDF(){
+  const cid=S.cid,key=S.pKey||'t1';const cls=S.classes[cid];if(!cls)return;
+  const dl=window.claude?.use?await claude.use('downloads').catch(()=>null):null;
+  if(!dl){toast('Le téléchargement n’est pas disponible ici.');return}
+  toast('Préparation du PDF…');
+  try{await loadLibs()}catch(err){toast('Impossible de préparer le PDF pour le moment. Réessayez.');return}
+  const host=document.createElement('div');host.style.cssText='position:fixed;left:-10000px;top:0;background:#fff;display:inline-block';
+  host.innerHTML=`<div class="ob pfs" style="background:#fff;width:max-content;padding:22px">${palmTable(cid,key,true)}</div>`;document.body.appendChild(host);
+  const node=host.firstElementChild;
+  try{const cv=await html2canvas(node,{scale:2,backgroundColor:'#ffffff',useCORS:true});
+    const land=cv.width>cv.height*1.05;const {jsPDF}=window.jspdf;const pdf=new jsPDF({unit:'mm',format:'a4',orientation:land?'landscape':'portrait'});
+    const W=land?297:210,H=land?210:297,mg=8;const iw=W-2*mg;const ih=cv.height*iw/cv.width;
+    if(ih<=H-2*mg)pdf.addImage(cv.toDataURL('image/jpeg',.92),'JPEG',mg,mg,iw,ih);
+    else{const pageH=Math.floor(cv.width*(H-2*mg)/iw);for(let y=0,first=true;y<cv.height;y+=pageH,first=false){const c2=document.createElement('canvas');c2.width=cv.width;c2.height=Math.min(pageH,cv.height-y);c2.getContext('2d').drawImage(cv,0,y,cv.width,c2.height,0,0,cv.width,c2.height);if(!first)pdf.addPage();pdf.addImage(c2.toDataURL('image/jpeg',.92),'JPEG',mg,mg,iw,c2.height*iw/cv.width)}}
+    const blob=pdf.output('blob');const name=`Palmarès ${cls.nom} - ${keyName(key)}.pdf`;
+    try{await dl.save({filename:name,data:blob});toast('PDF du palmarès enregistré.')}catch(err){if(err?.code!=='declined')toast('Le PDF n’a pas pu être enregistré.')}
+  }catch(err){toast('Impossible de créer le PDF. Réessayez.')}finally{host.remove()}
+}
 async function rapportPDF(){
   const eid=S.rEl,k=S.pKey||'t1';const e=S.eleves[eid];if(!e)return;
   const dl=window.claude?.use?await claude.use('downloads').catch(()=>null):null;
@@ -2248,6 +2266,7 @@ const A={
   'del-agent':async b=>{if(!arm(b))return;await del('personnel',b.dataset.id);closeSheet();toast('Agent retiré')},
   tgday:b=>daySheet(b.dataset.id),
   bulfs:()=>openBulFS(),
+  palmpdf:()=>palmPDF(),
   fsnav:b=>{if(FS.mode==='palm')return;const es=elevesOf(S.cid);const i=es.findIndex(e=>e.id===S.sel)+ +b.dataset.v;if(es[i]){S.sel=es[i].id;renderFS(true);refreshBul()}},
   fsz:b=>{const v=+b.dataset.v;if(!v){FS.z=FS.fit;applyFSZoom();$('#bfsb').scrollTo(0,0)}else zoomFS(FS.z*(v>0?1.25:.8))},
   fsclose:()=>closeBulFS(),
