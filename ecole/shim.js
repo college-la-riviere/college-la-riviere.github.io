@@ -8,6 +8,55 @@
   /* École de l'utilisateur (gardée après la connexion) : nom, devise, logo */
   try { const e = JSON.parse(localStorage.getItem('racine-ecole') || 'null'); if (e && e.code) { window.ECOLE = e; document.title = e.nom; } } catch (e) {}
   const EC = window.ECOLE;
+  /* ---------- Couleurs de l'école (thème choisi par la direction) ---------- */
+  const THEMES = [['violet', 'Violet', 262, 1], ['nuit', 'Bleu nuit', 226, 1], ['ocean', 'Océan', 198, 1], ['emeraude', 'Émeraude', 158, .9], ['foret', 'Forêt', 126, .75],
+    ['ambre', 'Ambre', 30, 1], ['rubis', 'Rubis', 356, 1], ['grenat', 'Grenat', 338, .9], ['prune', 'Prune', 300, .85], ['ardoise', 'Ardoise', 215, .22]];
+  const BASE_GRAD = 'linear-gradient(135deg,#1d0f3d,#533989 55%,#8363c6)';
+  const hx = n => n.toString(16).padStart(2, '0');
+  function rgb2hsl(r, g, b) { r /= 255; g /= 255; b /= 255; const mx = Math.max(r, g, b), mn = Math.min(r, g, b); let h = 0, s = 0; const l = (mx + mn) / 2;
+    if (mx !== mn) { const d = mx - mn; s = l > .5 ? d / (2 - mx - mn) : d / (mx + mn); h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60; } return [h, s, l]; }
+  function hsl2rgb(h, s, l) { h /= 360; const f = (p, q, t) => { if (t < 0) t += 1; if (t > 1) t -= 1; return t < 1 / 6 ? p + (q - p) * 6 * t : t < 1 / 2 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p; };
+    if (!s) return [l * 255, l * 255, l * 255].map(Math.round); const q = l < .5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q; return [f(p, q, h + 1 / 3), f(p, q, h), f(p, q, h - 1 / 3)].map(v => Math.round(v * 255)); }
+  function shift(r, g, b, H, SF) { const [h, s, l] = rgb2hsl(r, g, b); if (h < 232 || h > 302 || s < .12) return null; return hsl2rgb(H, Math.min(1, s * SF), l); }
+  function recolor(txt, H, SF) {
+    return txt.replace(/#([0-9a-fA-F]{6})\b/g, (m, x) => { const c = shift(parseInt(x.slice(0, 2), 16), parseInt(x.slice(2, 4), 16), parseInt(x.slice(4, 6), 16), H, SF); return c ? '#' + c.map(hx).join('') : m; })
+      .replace(/rgba\((\d+),\s*(\d+),\s*(\d+)/g, (m, r, g, b) => { const c = shift(+r, +g, +b, H, SF); return c ? `rgba(${c.join(',')}` : m; });
+  }
+  const themeOf = k => THEMES.find(t => t[0] === k) || THEMES[0];
+  const gradOf = k => { const t = themeOf(k); return t[0] === 'violet' ? BASE_GRAD : recolor(BASE_GRAD, t[2], t[3]); };
+  window.applyTheme = function (k) {
+    if (k !== undefined) window.__theme = k;
+    const t = themeOf(window.__theme);
+    document.querySelectorAll('style').forEach(st => {
+      if (st.dataset.orig === undefined) st.dataset.orig = st.textContent;
+      st.textContent = t[0] === 'violet' ? st.dataset.orig : recolor(st.dataset.orig, t[2], t[3]);
+    });
+    const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = t[0] === 'violet' ? '#1d0f3d' : recolor('#1d0f3d', t[2], t[3]);
+  };
+  window.__theme = (EC && EC.theme) || 'violet';
+  document.addEventListener('DOMContentLoaded', () => window.applyTheme());
+
+  function themePicker(first) {
+    const cur = window.__theme || 'violet'; let pick = cur;
+    const ov = document.createElement('div'); ov.id = 'tpick';
+    ov.innerHTML = `<div class="tp-box"><h2>${first ? 'Choisissez les couleurs de votre école' : 'Couleurs de l’application'}</h2>
+      <p>Ces couleurs s’appliquent à toute l’application de l’école, pour la direction et pour tous les enseignants.</p>
+      <div class="tp-grid">${THEMES.map(t => `<button type="button" class="tp-sw" data-k="${t[0]}" aria-pressed="${t[0] === cur}"><span class="tp-g" style="background:${gradOf(t[0])}"></span><b>${t[1]}</b></button>`).join('')}</div>
+      <div class="tp-msg" id="tp-msg"></div>
+      <button type="button" class="tp-ok">Valider ces couleurs</button><button type="button" class="tp-no">${first ? 'Plus tard' : 'Annuler'}</button></div>`;
+    document.body.appendChild(ov);
+    ov.querySelectorAll('.tp-sw').forEach(b => b.onclick = () => { pick = b.dataset.k; ov.querySelectorAll('.tp-sw').forEach(x => x.setAttribute('aria-pressed', x === b)); window.applyTheme(pick); });
+    ov.querySelector('.tp-no').onclick = () => { window.applyTheme(cur); ov.remove(); };
+    ov.querySelector('.tp-ok').onclick = async () => {
+      const msg = ov.querySelector('#tp-msg'); msg.textContent = 'Enregistrement…';
+      const { error } = await sb.rpc('racine_set_theme', { t: pick, couleur: gradOf(pick) });
+      if (error) { msg.textContent = 'Enregistrement impossible. Réessayez.'; return; }
+      try { const e = JSON.parse(localStorage.getItem('racine-ecole') || '{}'); e.theme = pick; localStorage.setItem('racine-ecole', JSON.stringify(e)); if (window.ECOLE) window.ECOLE.theme = pick; } catch (x) {}
+      ov.remove();
+    };
+  }
+  window.themePicker = themePicker;
+
   const sb = window.supabase.createClient(CFG.url, CFG.anonKey, {
     auth: { persistSession: true, autoRefreshToken: true, storageKey: 'clr-ecole-auth' }
   });
@@ -276,6 +325,20 @@
   #auth .apk{display:block;text-align:center;margin-top:6px;padding:13px;border-radius:16px;border:1.5px solid rgba(255,255,255,.35);color:#fff;text-decoration:none;font:600 15px Outfit,sans-serif}
   #auth .apk[hidden]{display:none}
   #auth .note{font-size:12.5px;color:rgba(255,255,255,.6);text-align:center}
+  #tpick{position:fixed;inset:0;z-index:2147483001;background:rgba(5,3,12,.72);backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;font-family:Outfit,system-ui,sans-serif;color:#fff}
+  #tpick .tp-box{width:100%;max-width:520px;max-height:92vh;overflow:auto;background:#140d26;border-radius:30px 30px 0 0;padding:24px max(18px,env(safe-area-inset-left,0px)) calc(22px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px;animation:tpup .35s cubic-bezier(.2,1,.3,1)}
+  @keyframes tpup{from{transform:translateY(40px);opacity:0}}
+  #tpick h2{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:26px;margin:0;text-transform:uppercase;line-height:1.05}
+  #tpick p{margin:0;color:rgba(255,255,255,.72);font-size:14px}
+  #tpick .tp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  #tpick .tp-sw{display:flex;flex-direction:column;gap:8px;align-items:flex-start;border:2px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);border-radius:20px;padding:8px 8px 10px;cursor:pointer;color:#fff;font:600 14px Outfit,sans-serif}
+  #tpick .tp-sw[aria-pressed="true"]{border-color:#fff;background:rgba(255,255,255,.1)}
+  #tpick .tp-g{display:block;width:100%;height:64px;border-radius:14px;position:relative;overflow:hidden}
+  #tpick .tp-g::after{content:"";position:absolute;width:90px;height:90px;border-radius:50%;right:-30px;bottom:-50px;border:14px solid rgba(255,255,255,.14)}
+  #tpick .tp-sw b{padding-left:4px}
+  #tpick .tp-ok{border:0;border-radius:16px;padding:15px;background:#fff;color:#111;font:700 16px Outfit,sans-serif;cursor:pointer}
+  #tpick .tp-no{border:0;background:none;color:rgba(255,255,255,.75);font:600 14px Outfit,sans-serif;padding:8px;cursor:pointer}
+  #tpick .tp-msg{min-height:18px;font-size:13.5px;color:#ffd7a8}
   .clr-acc{display:flex;align-items:center;gap:12px;margin:18px 0 6px;padding:14px 16px;border-radius:18px;background:var(--surface,#1a1033);border:1px solid var(--line,#2e1d55);color:var(--ink,#fff);font-family:var(--f-b,Outfit,sans-serif)}
   .clr-acc span{flex:1;min-width:0;font-size:14px;line-height:1.35}.clr-acc small{display:block;color:var(--muted,rgba(255,255,255,.7))}
   .clr-acc button{border:1px solid var(--line,#2e1d55);background:transparent;color:inherit;font:600 14px var(--f-b,Outfit,sans-serif);padding:10px 14px;border-radius:12px;cursor:pointer}`;
@@ -364,12 +427,13 @@
       const { data: st } = await sb.rpc('racine_mon_ecole');
       const e = Array.isArray(st) ? st[0] : st;
       if (e && e.code) {
-        const info = { code: e.code, nom: e.nom, devise: e.devise || '', logo: e.logo || '' };
+        const info = { code: e.code, nom: e.nom, devise: e.devise || '', logo: e.logo || '', theme: e.theme || '' };
         const prev = window.ECOLE;
         try { localStorage.setItem('racine-ecole', JSON.stringify(info)); } catch (x) {}
-        const changed = !prev ? e.code !== 'CLR' : (prev.code !== info.code || prev.nom !== info.nom || prev.logo !== info.logo || prev.devise !== info.devise);
+        const changed = !prev ? e.code !== 'CLR' : (prev.code !== info.code || prev.nom !== info.nom || prev.logo !== info.logo || prev.devise !== info.devise || (prev.theme || '') !== info.theme);
         if (changed && !sessionStorage.getItem('racine-reload')) { try { sessionStorage.setItem('racine-reload', '1'); } catch (x) {} location.reload(); return; }
-        window.ECOLE = info; document.title = info.nom; try { sessionStorage.removeItem('racine-reload'); } catch (x) {}
+        window.ECOLE = info; document.title = info.nom; window.__theme = info.theme || 'violet'; window.applyTheme();
+        if (member.role === 'admin' && !info.theme) { const wait = () => { const it = document.getElementById('intro'); if (it && !it.hidden) return setTimeout(wait, 600); setTimeout(() => themePicker(true), 400); }; setTimeout(wait, 800); } try { sessionStorage.removeItem('racine-reload'); } catch (x) {}
       }
       if (e && e.actif === false) {
         box.hidden = false;
@@ -420,6 +484,10 @@
     d.querySelector('button').onclick = () => window.appLogout();
     host.appendChild(d);
     if (ME.member.role === 'admin' && S.view === 'gestion') {
+      const tc = document.createElement('div'); tc.className = 'clr-acc';
+      tc.innerHTML = `<span><b>Couleurs de l’application</b><small>Thème actuel : ${themeOf(window.__theme)[1]} · pour toute l’école</small></span><button type="button">Changer</button>`;
+      tc.querySelector('button').onclick = () => themePicker(false);
+      host.insertBefore(tc, d);
       const k = document.createElement('div'); k.className = 'clr-acc';
       k.innerHTML = `<span><b>Sauvegarde des données</b><small>Une copie de toutes les données de l’école (élèves, cotes, appels, rapports…). À faire chaque vendredi et à garder en lieu sûr.</small></span><button type="button">Sauvegarder</button>`;
       k.querySelector('button').onclick = backup;
