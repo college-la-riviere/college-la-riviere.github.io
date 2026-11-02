@@ -79,15 +79,15 @@ h1,h2,h3{font-family:var(--f-d);margin:0;text-wrap:balance;letter-spacing:-.02em
 .sec-h small{color:var(--mute)}
 .lead{color:var(--mute);margin:0;max-width:60ch}
 .shots{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding-inline:max(16px,env(safe-area-inset-left,0px));scrollbar-width:none}
-.shot{flex:0 0 74%;max-width:300px;scroll-snap-align:start;border-radius:28px;padding:20px;display:flex;flex-direction:column;gap:10px;min-height:250px;position:relative;overflow:hidden}
+.shot{flex:0 0 56%;max-width:230px;scroll-snap-align:start;border-radius:24px;padding:16px;display:flex;flex-direction:column;gap:8px;min-height:190px;position:relative;overflow:hidden}
 .shot:nth-child(3n+1){background:linear-gradient(160deg,var(--y4),var(--y6));color:var(--acc-ink)}
 .shot:nth-child(3n+2){background:var(--cream);color:var(--ink)}
 .shot:nth-child(3n){background:var(--ink3);color:var(--cream);border:1px solid var(--line)}
-.shot .ic{width:52px;height:52px;border-radius:18px;display:grid;place-items:center;background:var(--ink);color:var(--hi)}
+.shot .ic{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:var(--ink);color:var(--hi)}
 .shot:nth-child(3n) .ic{background:var(--lime);color:var(--acc-ink)}
 .shot:nth-child(3n+2) .ic{background:var(--lime2);color:var(--acc-ink)}
-.shot h3{font-size:22px;font-weight:700}
-.shot p{margin:0;font-size:14.5px;opacity:.82}
+.shot h3{font-size:18px;font-weight:700}
+.shot p{margin:0;font-size:13px;line-height:1.4;opacity:.82}
 .shot .tag{margin-top:auto;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.6}
 .shot::after{content:"";position:absolute;right:-50px;bottom:-60px;width:150px;height:150px;border-radius:50%;border:22px solid currentColor;opacity:.06}
 .list{display:flex;flex-direction:column;gap:8px}
@@ -120,7 +120,7 @@ h1,h2,h3{font-family:var(--f-d);margin:0;text-wrap:balance;letter-spacing:-.02em
 .sc::before{content:"";position:absolute;inset:0;z-index:-1;background:repeating-radial-gradient(circle at 100% 0,transparent 0 18px,rgba(255,255,255,.022) 19px 20px),linear-gradient(180deg,transparent 30%,rgba(0,0,0,.38))}
 .sc .body{display:flex;gap:14px;align-items:center}
 .logo{flex:none;width:72px;height:72px;border-radius:22px;background:var(--cream);color:var(--ink);display:grid;place-items:center;font-family:var(--f-d);font-weight:800;font-size:24px;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,.3)}
-.logo img{width:100%;height:100%;object-fit:cover}
+.logo img{width:100%;height:100%;object-fit:cover;display:block}
 .sc .tx{flex:1;min-width:0;padding-bottom:2px}
 .sc .tx b{display:block;font-size:17px;line-height:1.2}
 .sc .tx span{display:block;color:rgba(255,255,255,.75);font-size:13px}
@@ -280,9 +280,8 @@ function vAccueil(){
    <h1>Moderniser le <em>système éducatif.</em></h1>
    <p>Une seule application pour toutes vos écoles : appel, cotes, bulletins officiels, palmarès et rapports aux parents.</p>
    <div class="acts"><button class="pill dark" data-act="monecole">${ic('school',18)} Mon école</button><button class="pill dark" style="background:rgba(246,245,239,.16);color:var(--acc-ink)" data-act="go" data-v="ecoles">Voir les écoles</button></div></section>
-   <div class="stats num"><div class="stat"><b>${DB.schools.length}</b><span>écoles</span></div><div class="stat"><b>${ac}</b><span>actives</span></div><div class="stat"><b>${cl}</b><span>classes</span></div></div>
    <section class="sec"><div class="sec-h"><h2>Ce que fait racine.ia</h2><small>${FEATS.length} outils</small></div>
-    <div class="shots">${FEATS.map(([i,t,d,g])=>`<article class="shot"><span class="ic">${ic(i,26)}</span><h3>${t}</h3><p>${d}</p><span class="tag">${g}</span></article>`).join('')}</div></section>
+    <div class="shots">${FEATS.map(([i,t,d,g])=>`<article class="shot"><span class="ic">${ic(i,22)}</span><h3>${t}</h3><p>${d}</p><span class="tag">${g}</span></article>`).join('')}</div></section>
    <section class="sec"><div class="sec-h"><h2>Pourquoi racine.ia</h2></div><div class="list">${PROS.map(([t,d])=>`<div class="row pro"><span class="dot">✓</span><div><b>${t}</b><span>${d}</span></div></div>`).join('')}</div></section>
    <section class="sec"><div class="sec-h"><h2>Les limites à connaître</h2></div><p class="lead">Ce qu’il faut prévoir avant de commencer, et comment nous y répondons.</p>
     <div class="list">${CONS.map(([t,d])=>`<div class="row con"><span class="dot">!</span><div><b>${t}</b><span class="rep">${d}</span></div></div>`).join('')}</div></section>
