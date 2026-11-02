@@ -330,8 +330,8 @@ function render(){
   const q=$('#q');if(q)q.addEventListener('input',e=>{S.q=e.target.value;const p=e.target.selectionStart;render();const n=$('#q');n.focus();n.setSelectionRange(p,p)});
 }
 const toast=t=>{const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)};
-const sheet=html=>{$('#ov').innerHTML=`<div class="scrim" data-act="close"><div class="sheet" role="dialog" aria-modal="true">${html}</div></div>`};
-const close=()=>$('#ov').innerHTML='';
+let sheet=html=>{$('#ov').innerHTML=`<div class="scrim" data-act="close"><div class="sheet" role="dialog" aria-modal="true">${html}</div></div>`};
+let close=()=>$('#ov').innerHTML='';
 const ACT={
  go:b=>{S.view=b.dataset.v;close();render();scrollTo(0,0)},
  ecole:b=>{S.sid=b.dataset.id;S.view='ecole';render();scrollTo(0,0)},
@@ -399,6 +399,13 @@ document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target
   $('#intro').addEventListener('click',end);$('#intro').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')end()});
   setTimeout(end,5200);
 })();
+const HK=['view','sid'];let ovl=false,restoring=false;
+const snapP=()=>({view:S.view,sid:S.sid});const sameP=(a,b)=>a&&b&&a.view===b.view&&a.sid===b.sid;
+function histSync(){if(restoring||ovl)return;const cur=snapP(),top=history.state&&history.state.racine;if(!top){history.replaceState({racine:cur},'');return}if(!sameP(top,cur))history.pushState({racine:cur},'')}
+const _render=render;render=function(){_render();try{histSync()}catch(e){}};
+const _sheet=sheet;sheet=function(x){_sheet(x);if(!ovl){ovl=true;history.pushState({racine:snapP(),overlay:1},'')}};
+const _close=close;close=function(){const was=ovl;ovl=false;_close();if(was&&history.state&&history.state.overlay)history.replaceState({racine:snapP()},'')};
+addEventListener('popstate',ev=>{if(ovl){ovl=false;_close();return}const st=ev.state&&ev.state.racine;if(!st)return;if(sameP(st,snapP())){history.back();return}restoring=true;try{S.view=st.view;S.sid=st.sid;_render();scrollTo(0,0)}finally{restoring=false}});
 render();loadSchools();checkAdmin().then(a=>{if(a){S.admin=true;if(S.view==='console')render()}});
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('/sw.js',{scope:'/'}).catch(()=>{}));
 </script>

@@ -497,9 +497,37 @@
   addEventListener('load', () => {
     if (typeof window.render === 'function') {
       const r = window.render;
-      window.render = function () { const out = r.apply(this, arguments); try { accountBlock(); } catch (e) {} return out; };
+      window.render = function () { const out = r.apply(this, arguments); try { accountBlock(); } catch (e) {} try { histSync(); } catch (e) {} return out; };
     }
+    histInit();
   });
+
+  /* ---------- Bouton retour du téléphone : revenir à l'écran précédent ---------- */
+  const HK = ['view', 'cid', 'ctab', 'pid', 'pBack', 'pTab', 'aVue', 'pDate'];
+  let overlay = null, restoring = false;
+  const snap = () => { const o = {}; if (typeof S === 'undefined') return o; HK.forEach(k => { o[k] = S[k] === undefined ? null : S[k]; }); return o; };
+  const same = (a, b) => HK.every(k => (a && a[k]) === (b && b[k]));
+  function histSync() {
+    if (restoring || overlay) return;
+    const cur = snap(), top = history.state && history.state.racine;
+    if (!top) { history.replaceState({ racine: cur }, ''); return; }
+    if (!same(top, cur)) history.pushState({ racine: cur }, '');
+  }
+  function histInit() {
+    if (typeof S === 'undefined') return;
+    history.replaceState({ racine: snap() }, '');
+    const wrapOpen = (name, kind) => { const f = window[name]; if (typeof f !== 'function') return; window[name] = function () { const out = f.apply(this, arguments); if (!overlay) { overlay = kind; history.pushState({ racine: snap(), overlay: kind }, ''); } return out; }; };
+    const wrapClose = (name, kind) => { const f = window[name]; if (typeof f !== 'function') return; window[name] = function () { const was = overlay === kind; overlay = null; const out = f.apply(this, arguments); if (was && history.state && history.state.overlay) history.replaceState({ racine: snap() }, ''); return out; }; };
+    wrapOpen('openSheet', 'sheet'); wrapClose('closeSheet', 'sheet');
+    wrapOpen('openBulFS', 'fs'); wrapClose('closeBulFS', 'fs');
+    addEventListener('popstate', ev => {
+      if (overlay === 'sheet') { overlay = null; try { closeSheet(); } catch (e) {} return; }
+      if (overlay === 'fs') { overlay = null; try { closeBulFS(); } catch (e) {} return; }
+      const st = ev.state && ev.state.racine; if (!st) return;
+      if (same(st, snap())) { history.back(); return; }   // doublon : on recule encore
+      restoring = true; try { Object.assign(S, st); render(); scrollTo(0, 0); } finally { restoring = false; }
+    });
+  }
 
   sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT' && ME) location.reload(); });
   start().catch(() => { box.hidden = false; msg('Connexion au serveur impossible. Vérifiez internet.'); });
