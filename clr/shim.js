@@ -300,7 +300,7 @@
       <p class="note">Mot de passe oublié : refaites cette étape avec le même téléphone et votre code ; le nouveau mot de passe remplace l’ancien.</p>
     </form>
     <div class="msg" id="a-msg" role="status"></div>
-    <a class="apk" id="a-apk" href="../college-la-riviere.apk" download hidden>⬇ Télécharger l’application Android</a>
+    <a class="apk" id="a-apk" href="../racine.apk" download hidden>⬇ Télécharger l’application Android</a>
   </div>`;
   const mount = () => document.body.appendChild(box);
   document.body ? mount() : document.addEventListener('DOMContentLoaded', mount);
