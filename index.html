@@ -3,7 +3,7 @@
 <meta name="theme-color" content="#0c0d0a"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="racine-192.png"><link rel="apple-touch-icon" href="racine-180.png">
 <meta name="description" content="racine.ia — moderniser le système éducatif. Appel, cotes, bulletins officiels, palmarès et rapports aux parents pour toutes vos écoles.">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
-<script src="clr/config.js"></script>
+<script src="ecole/config.js"></script>
 <title>racine.ia</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Outfit:wght@400;500;600;700&display=swap">
@@ -233,7 +233,7 @@ async function loadSchools(){
   const {data,error}=await sb.rpc('racine_ecoles');
   if(error){DB.err='Impossible de charger les écoles. Vérifiez internet.';render();return}
   DB.ok=true;DB.err='';DB.schools=data.map((r,k)=>({id:r.code.toLowerCase(),code:r.code,nom:r.nom,ville:r.ville||'Kinshasa',commune:r.commune||'—',directeur:r.directeur||'À renseigner',
-    classes:r.classes||0,enseignants:r.enseignants||0,logo:r.logo||'',cov:r.couleur||COVS[k%COVS.length],url:r.app||'',actif:r.actif,payeJusqua:r.paye_jusqua||'9999-12-31',plan:r.plan||'Standard',depuis:r.depuis||''}));
+    classes:r.classes||0,enseignants:r.enseignants||0,logo:r.logo||'',cov:r.couleur||COVS[k%COVS.length],url:r.app||'',actif:r.actif,payeJusqua:r.paye_jusqua||'9999-12-31',plan:r.plan||'Standard',depuis:r.depuis||'',codeDir:!!r.code_dir,devise:r.devise||''}));
   render();
 }
 async function checkAdmin(){if(!sb)return false;const {data:{session}}=await sb.auth.getSession();if(!session)return false;const {data}=await sb.rpc('racine_is_admin');return !!data}
@@ -318,7 +318,7 @@ function vConsole(){
    <button class="pill lime" style="justify-content:center;padding:15px" data-act="newschool">${ic('plus',18)} Ajouter une école</button>
    <div class="adm">${DB.schools.map(s=>{const st=statut(s);return `<div class="ar"><div class="hd">${logo(s)}<span class="tx"><b>${h(s.nom)}</b><span>${h(s.code)} · ${h(s.commune)} · <span class="st ${st}" style="padding:2px 8px">${STL[st]}</span></span></span>
      <button class="sw" role="switch" aria-checked="${s.actif}" aria-label="Accès de ${h(s.nom)}" data-act="toggle" data-id="${s.id}"></button></div>
-     <div class="pay"><span>Abonnement ${h(s.plan)} · payé jusqu’au <b>${dfr(s.payeJusqua)}</b></span><button class="pill ghost sm" data-act="pay" data-id="${s.id}">+ 1 mois payé</button></div></div>`}).join('')}</div>
+     <div class="pay"><span>Abonnement ${h(s.plan)} · payé jusqu’au <b>${dfr(s.payeJusqua)}</b></span><button class="pill ghost sm" data-act="pay" data-id="${s.id}">+ 1 mois payé</button></div><div class="pay"><span>Code du directeur : <b>${s.codeDir?'donné':'pas encore donné'}</b></span><button class="pill ${s.codeDir?'ghost':'lime'} sm" data-act="codedir" data-id="${s.id}">${s.codeDir?'Changer le code':'Donner un code'}</button></div></div>`}).join('')}</div>
    <p class="note">L’interrupteur ouvre ou suspend l’accès de l’école. Une école suspendue ne perd aucune donnée : ses enseignants voient un message et retrouvent tout dès la réouverture.</p>`;
 }
 const VIEWS={accueil:vAccueil,ecoles:vEcoles,ecole:vEcole,console:vConsole};
@@ -342,6 +342,7 @@ const ACT={
    <button class="pill lime" style="justify-content:center;padding:15px">Trouver mon école</button></form>
    <button class="pill ghost" style="justify-content:center" data-act="go" data-v="ecoles">Voir toutes les écoles</button>`),
  logout:async()=>{S.admin=false;render()},
+ codedir:b=>{const s=DB.schools.find(x=>x.id===b.dataset.id);sheet(`<h2>Code du directeur</h2><p class="lead">${h(s.nom)} · le directeur entre avec le code de l’école <b>${h(s.code)}</b> et ce code à 4 chiffres, puis choisit son mot de passe.</p><form id="f-cd" class="sec" data-id="${s.id}"><div class="f"><label for="cd">Code à 4 chiffres</label><input id="cd" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" required style="letter-spacing:.4em;font-size:22px;text-align:center"></div><div class="msg" id="cdmsg"></div><button class="pill lime" style="justify-content:center;padding:15px">Enregistrer le code</button></form>`)},
  entrer:b=>{const s=DB.schools.find(x=>x.id===b.dataset.id);sheet(`<div style="display:flex;gap:12px;align-items:center">${logo(s)}<div><h2>${h(s.nom)}</h2><span class="note">Code ${h(s.code)}</span></div></div>
    <form id="f-in" class="sec" data-id="${s.id}"><div class="f"><label for="in-tel">Numéro de téléphone</label><input id="in-tel" type="tel" inputmode="tel" autocomplete="username" placeholder="08x xxx xxxx" required></div>
    <div class="f"><label for="in-pw">Mot de passe</label><input id="in-pw" type="password" autocomplete="current-password" required></div><div class="msg" id="inmsg"></div>
@@ -352,7 +353,7 @@ const ACT={
    <div class="f"><label for="n-nom">Nom de l’école</label><input id="n-nom" required placeholder="Complexe Scolaire …"></div>
    <div class="g2"><div class="f"><label for="n-code">Code</label><input id="n-code" required maxlength="6" style="text-transform:uppercase" placeholder="CSXX"></div><div class="f"><label for="n-cl">Classes</label><input id="n-cl" type="number" min="1" value="6"></div></div>
    <div class="g2"><div class="f"><label for="n-com">Commune</label><input id="n-com" placeholder="Lemba"></div><div class="f"><label for="n-vil">Ville</label><input id="n-vil" value="Kinshasa"></div></div>
-   <div class="f"><label for="n-dir">Directeur</label><input id="n-dir" placeholder="Nom du directeur"></div>
+   <div class="f"><label for="n-dir">Directeur</label><input id="n-dir" placeholder="Nom du directeur"></div><div class="g2"><div class="f"><label for="n-cd">Code du directeur</label><input id="n-cd" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="4 chiffres" required></div><div class="f"><label for="n-dev">Devise</label><input id="n-dev" placeholder="Discipline · Travail"></div></div>
    <div class="f"><label for="n-logo">Logo (facultatif)</label><input id="n-logo" type="file" accept="image/*"></div>
    <div class="msg" id="newmsg"></div><button class="pill lime" style="justify-content:center;padding:15px">Créer l’école</button></form>`)
 };
@@ -368,12 +369,13 @@ document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target
     if(!e||e.code!==s.code){await sb.auth.signOut();m.style.color='';m.textContent='Ce compte n’appartient pas à cette école.';return}
     if(!e.actif){m.style.color='';m.textContent='L’accès de cette école est suspendu par racine.ia.';return}
     location.href=s.url;return}
+  if(f.id==='f-cd'){const s=DB.schools.find(x=>x.id===f.dataset.id);const {error}=await sb.rpc('racine_code_directeur',{c:s.code,p_code:$('#cd').value.trim()});if(error){$('#cdmsg').textContent=/déjà/.test(error.message)?'Ce code est déjà utilisé dans cette école.':'Enregistrement impossible.';return}close();toast('Code du directeur enregistré');loadSchools();return}
   if(f.id==='f-pin'){const m=$('#pinmsg');const t=normPhone($('#ad-tel').value);m.textContent='';const {error}=await sb.auth.signInWithPassword({email:emailOf(t),password:$('#ad-pw').value});if(error){m.textContent='Téléphone ou mot de passe incorrect.';return}if(await checkAdmin()){S.admin=true;loadSchools()}else{m.textContent='Ce compte n’a pas accès à la console racine.ia.'}}
   if(f.id==='f-new'){const code=$('#n-code').value.trim().toUpperCase();if(DB.schools.some(s=>s.code===code)){$('#newmsg').textContent='Ce code est déjà utilisé par une autre école.';return}
     let lg='';const file=$('#n-logo').files[0];if(file)lg=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=160;const x=c.getContext('2d');const m=Math.min(im.width,im.height);x.drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,160,160);r(c.toDataURL('image/jpeg',.85))};im.src=fr.result};fr.readAsDataURL(file)});
     const covs=['linear-gradient(135deg,#0d3b2e,#1f8a5b 60%,#8be0b0)','linear-gradient(135deg,#3a0f2e,#a8327a 60%,#ff9ad5)','linear-gradient(135deg,#102a43,#2f6db5 60%,#9bd0ff)'];
     const d=new Date();d.setUTCMonth(d.getUTCMonth()+1);
-    const {error}=await sb.rpc('racine_creer_ecole',{p_nom:$('#n-nom').value.trim(),p_code:code,p_ville:$('#n-vil').value.trim()||'Kinshasa',p_commune:$('#n-com').value.trim()||null,p_directeur:$('#n-dir').value.trim()||null,p_couleur:covs[DB.schools.length%3],p_logo:lg||null});
+    const {error}=await sb.rpc('racine_creer_ecole',{p_nom:$('#n-nom').value.trim(),p_code:code,p_ville:$('#n-vil').value.trim()||'Kinshasa',p_commune:$('#n-com').value.trim()||null,p_directeur:$('#n-dir').value.trim()||null,p_couleur:covs[DB.schools.length%3],p_logo:lg||null,p_devise:$('#n-dev').value.trim()||null,p_code_dir:$('#n-cd').value.trim()});
     if(error){$('#newmsg').textContent='Création impossible : '+(/duplicate|unique/i.test(error.message)?'ce code existe déjà.':'réessayez.');return}
     close();toast('École créée');loadSchools()}
 });

@@ -1,10 +1,13 @@
-/* Collège La Rivière — connexion à Supabase.
+/* racine.ia — application d'une école, connexion à Supabase.
    Ce fichier fournit à l'application les mêmes services que la version Claude
    (base de données en temps réel, utilisateur, assistant IA, téléchargements),
    et affiche l'écran de connexion. */
 (function () {
   'use strict';
   const CFG = window.CLR_CONFIG || {};
+  /* École de l'utilisateur (gardée après la connexion) : nom, devise, logo */
+  try { const e = JSON.parse(localStorage.getItem('racine-ecole') || 'null'); if (e && e.code) { window.ECOLE = e; document.title = e.nom; } } catch (e) {}
+  const EC = window.ECOLE;
   const sb = window.supabase.createClient(CFG.url, CFG.anonKey, {
     auth: { persistSession: true, autoRefreshToken: true, storageKey: 'clr-ecole-auth' }
   });
@@ -280,8 +283,8 @@
 
   const box = document.createElement('div'); box.id = 'auth'; box.hidden = true;
   box.innerHTML = `<div class="box">
-    <img class="lg" src="icon-192-v3.png" alt="">
-    <h1>Collège La Rivière</h1>
+    <img class="lg" src="${EC && EC.code !== 'CLR' ? (EC.logo || '../racine-192.png') : 'icon-192-v3.png'}" alt="" style="${EC && EC.code !== 'CLR' && EC.logo ? 'border-radius:50%;background:#fff;padding:8px' : ''}">
+    <h1>${EC ? EC.nom.replace(/[<>&]/g, '') : 'racine.ia'}</h1>
     <p id="a-sub">Connectez-vous avec votre numéro de téléphone.</p>
     <div class="tabs" role="tablist"><button type="button" data-t="in" class="on">Se connecter</button><button type="button" data-t="up">Première fois</button></div>
     <form id="a-in" autocomplete="on">
@@ -292,7 +295,7 @@
     </form>
     <form id="a-up" hidden>
       <p>Utilisez le code personnel à 4 chiffres donné par la direction. Il relie ce téléphone à votre profil.</p>
-      <label>Code de l’école<input name="school" autocapitalize="characters" required value="${(CFG.schoolCode || '').replace(/"/g, '')}"></label>
+      <label>Code de l’école<input name="school" autocapitalize="characters" required value="${((EC && EC.code) || '').replace(/"/g, '')}" placeholder="Ex. CLR"></label>
       <label>Code personnel (4 chiffres)<input class="code" name="code" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" autocomplete="one-time-code" required></label>
       <label>Numéro de téléphone<input name="tel" type="tel" inputmode="tel" autocomplete="username" placeholder="08x xxx xxxx" required></label>
       <label>Choisissez un mot de passe<input name="pw" type="password" autocomplete="new-password" minlength="6" required></label>
@@ -360,6 +363,14 @@
     try {
       const { data: st } = await sb.rpc('racine_mon_ecole');
       const e = Array.isArray(st) ? st[0] : st;
+      if (e && e.code) {
+        const info = { code: e.code, nom: e.nom, devise: e.devise || '', logo: e.logo || '' };
+        const prev = window.ECOLE;
+        try { localStorage.setItem('racine-ecole', JSON.stringify(info)); } catch (x) {}
+        const changed = !prev ? e.code !== 'CLR' : (prev.code !== info.code || prev.nom !== info.nom || prev.logo !== info.logo || prev.devise !== info.devise);
+        if (changed && !sessionStorage.getItem('racine-reload')) { try { sessionStorage.setItem('racine-reload', '1'); } catch (x) {} location.reload(); return; }
+        window.ECOLE = info; document.title = info.nom; try { sessionStorage.removeItem('racine-reload'); } catch (x) {}
+      }
       if (e && e.actif === false) {
         box.hidden = false;
         box.querySelector('.box').innerHTML = `<img class="lg" src="icon-192-v3.png" alt=""><h1>Accès suspendu</h1>
@@ -383,13 +394,14 @@
     try { await loadAll(); } catch (e) {}
     const rows = {}; for (const [c, m] of Object.entries(cache)) rows[c] = Object.fromEntries(m);
     const date = new Date().toISOString().slice(0, 10);
-    const blob = new Blob([JSON.stringify({ ecole: 'Collège La Rivière', date: new Date().toISOString(), version: 1, donnees: rows })], { type: 'application/json' });
-    try { await downloads.save({ filename: `Sauvegarde Collège La Rivière ${date}.json`, data: blob }); } catch (e) {}
+    const blob = new Blob([JSON.stringify({ ecole: (window.ECOLE && window.ECOLE.nom) || 'École', date: new Date().toISOString(), version: 1, donnees: rows })], { type: 'application/json' });
+    try { await downloads.save({ filename: `Sauvegarde ${(window.ECOLE && window.ECOLE.nom) || 'école'} ${date}.json`, data: blob }); } catch (e) {}
   }
 
   window.appLogout = async () => {
     try { if (channel) await sb.removeChannel(channel); } catch (e) {}
     await IDB.clear();
+    try { localStorage.removeItem('racine-ecole'); sessionStorage.removeItem('racine-reload'); } catch (e) {}
     await sb.auth.signOut();
     try { localStorage.removeItem('clr-intro'); } catch (e) {}
     location.reload();
