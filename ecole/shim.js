@@ -1,4 +1,4 @@
-/* racine.ia — application d'une école, connexion à Supabase.
+/* racines.ia — application d'une école, connexion à Supabase.
    Ce fichier fournit à l'application les mêmes services que la version Claude
    (base de données en temps réel, utilisateur, assistant IA, téléchargements),
    et affiche l'écran de connexion. */
@@ -358,7 +358,7 @@
   const box = document.createElement('div'); box.id = 'auth'; box.hidden = true;
   box.innerHTML = `<div class="box">
     <img class="lg" src="${EC && EC.code !== 'CLR' ? (EC.logo || '../racine-192.png') : 'icon-192-v3.png'}" alt="" style="${EC && EC.code !== 'CLR' && EC.logo ? 'border-radius:50%;background:#fff;padding:8px' : ''}">
-    <h1>${EC ? EC.nom.replace(/[<>&]/g, '') : 'racine.ia'}</h1>
+    <h1>${EC ? EC.nom.replace(/[<>&]/g, '') : 'racines.ia'}</h1>
     <p id="a-sub">Connectez-vous avec votre numéro de téléphone.</p>
     <div class="tabs" role="tablist"><button type="button" data-t="in" class="on">Se connecter</button><button type="button" data-t="up">Première fois</button></div>
     <form id="a-in" autocomplete="on">
@@ -449,8 +449,9 @@
       if (e && e.actif === false) {
         box.hidden = false;
         box.querySelector('.box').innerHTML = `<img class="lg" src="icon-192-v3.png" alt=""><h1>Accès suspendu</h1>
-          <p>L’accès de <b>${(e.nom || 'votre école').replace(/[<>&]/g, '')}</b> est suspendu par racine.ia. Vos données sont conservées. La direction doit régulariser l’abonnement pour rouvrir l’accès.</p>
-          <button class="go" type="button" id="a-out">Se déconnecter</button><a class="lnk" href="../" style="text-align:center">Retour à racine.ia</a>`;
+          <p>L’accès de <b>${(e.nom || 'votre école').replace(/[<>&]/g, '')}</b> est suspendu par racines.ia. Vos données sont conservées. La direction doit régulariser l’abonnement pour rouvrir l’accès.</p>
+          <p style="font-size:14px">Contact racines.ia : <a href="https://wa.me/243981475141?text=Bonjour%20racines.ia%2C%20je%20souhaite%20inscrire%20mon%20%C3%A9cole." target="_blank" rel="noopener" style="color:inherit;font-weight:700">WhatsApp 0981 475 141</a> · <a href="mailto:racines.ia@gmail.com" style="color:inherit;font-weight:700">racines.ia@gmail.com</a></p>
+          <button class="go" type="button" id="a-out">Se déconnecter</button><a class="lnk" href="../" style="text-align:center">Retour à racines.ia</a>`;
         box.querySelector('#a-out').onclick = () => window.appLogout();
         return;
       }

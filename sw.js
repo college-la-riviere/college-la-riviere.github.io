@@ -1,5 +1,5 @@
-/* racine.ia — démarrage hors ligne (les données restent sur Supabase) */
-const CACHE = 'racine-v2';
+/* racines.ia — démarrage hors ligne (les données restent sur Supabase) */
+const CACHE = 'racine-v3';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/racine-192.png', '/racine-512.png', '/ecole/', '/ecole/index.html', '/ecole/shim.js', '/ecole/config.js', '/ecole/icon-192-v3.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
