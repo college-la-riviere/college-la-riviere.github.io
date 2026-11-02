@@ -7,11 +7,11 @@ $$;
 grant execute on function public.racine_mon_ecole() to authenticated;
 create or replace function public.racine_set_theme(t text, couleur text) returns void
 language plpgsql security definer set search_path=public as $$
-declare sid uuid;
+declare sid uuid; g text := racine_set_theme.couleur;
 begin
   select m.school_id into sid from ecole_members m where m.user_id=auth.uid() and m.role='admin' limit 1;
   if sid is null then raise exception 'réservé à la direction'; end if;
   if t !~ '^[a-z]{2,12}$' then raise exception 'thème inconnu'; end if;
-  update ecole_schools set theme=t, couleur=coalesce(nullif(couleur,''),ecole_schools.couleur) where id=sid;
+  update ecole_schools s set theme=t, couleur=coalesce(nullif(g,''),s.couleur) where s.id=sid;
 end $$;
 grant execute on function public.racine_set_theme(text,text) to authenticated;
