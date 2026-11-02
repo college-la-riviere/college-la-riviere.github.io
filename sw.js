@@ -1,16 +1,16 @@
-/* Collège La Rivière — démarrage hors ligne de l'application (les données restent sur Supabase) */
-const CACHE = 'clr-ecole-v6';
-const SHELL = ['./', './index.html', './shim.js', './config.js', './manifest.webmanifest', './icon-192-v3.png', './icon-512-v3.png'];
+/* racine.ia — démarrage hors ligne (les données restent sur Supabase) */
+const CACHE = 'racine-v1';
+const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/racine-192.png', '/racine-512.png', '/clr/', '/clr/index.html', '/clr/shim.js', '/clr/config.js', '/clr/icon-192-v3.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
-self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('clr-ecole-') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
+self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {
   const r = e.request; if (r.method !== 'GET') return;
   const u = new URL(r.url);
   const same = u.origin === location.origin && !u.pathname.endsWith('.apk');
   const lib = /cdn\.jsdelivr\.net|cdnjs\.cloudflare\.com|fonts\.(googleapis|gstatic)\.com/.test(u.hostname);
-  if (!same && !lib) return;            // Supabase et le reste : toujours en direct
+  if (!same && !lib) return;
   e.respondWith(fetch(r).then(res => {
     if (res.ok || res.type === 'opaque') { const cp = res.clone(); caches.open(CACHE).then(c => c.put(r, cp)); }
     return res;
-  }).catch(() => caches.match(r).then(m => m || (r.mode === 'navigate' ? caches.match('./index.html') : undefined))));
+  }).catch(() => caches.match(r).then(m => m || (r.mode === 'navigate' ? caches.match(u.pathname.startsWith('/clr/') ? '/clr/index.html' : '/index.html') : undefined))));
 });

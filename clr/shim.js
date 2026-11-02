@@ -300,7 +300,7 @@
       <p class="note">Mot de passe oublié : refaites cette étape avec le même téléphone et votre code ; le nouveau mot de passe remplace l’ancien.</p>
     </form>
     <div class="msg" id="a-msg" role="status"></div>
-    <a class="apk" id="a-apk" href="college-la-riviere.apk" download hidden>⬇ Télécharger l’application Android</a>
+    <a class="apk" id="a-apk" href="../college-la-riviere.apk" download hidden>⬇ Télécharger l’application Android</a>
   </div>`;
   const mount = () => document.body.appendChild(box);
   document.body ? mount() : document.addEventListener('DOMContentLoaded', mount);
@@ -357,6 +357,18 @@
       return msg(/does not exist|relation/i.test(error.message) ? 'La base de données de l’école n’est pas encore installée.' : 'Connexion au serveur impossible. Vérifiez internet puis rouvrez l’application.');
     }
     if (!member) { await sb.auth.signOut(); box.hidden = false; tab('up'); return msg('Ce compte n’est relié à aucun profil. Utilisez votre code personnel.'); }
+    try {
+      const { data: st } = await sb.rpc('racine_mon_ecole');
+      const e = Array.isArray(st) ? st[0] : st;
+      if (e && e.actif === false) {
+        box.hidden = false;
+        box.querySelector('.box').innerHTML = `<img class="lg" src="icon-192-v3.png" alt=""><h1>Accès suspendu</h1>
+          <p>L’accès de <b>${(e.nom || 'votre école').replace(/[<>&]/g, '')}</b> est suspendu par racine.ia. Vos données sont conservées. La direction doit régulariser l’abonnement pour rouvrir l’accès.</p>
+          <button class="go" type="button" id="a-out">Se déconnecter</button><a class="lnk" href="../" style="text-align:center">Retour à racine.ia</a>`;
+        box.querySelector('#a-out').onclick = () => window.appLogout();
+        return;
+      }
+    } catch (err) {}
     if (ME) return;
     ME = { uid: session.user.id, member, phone: session.user.email.split('@')[0] };
     box.hidden = true;

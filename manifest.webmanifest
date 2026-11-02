@@ -1,37 +1,19 @@
 {
-  "name": "Collège La Rivière",
-  "short_name": "La Rivière",
-  "description": "Gestion de l’école : appel, cahier de cotes, bulletins, palmarès et rapports aux parents.",
+  "name": "racine.ia",
+  "short_name": "racine.ia",
+  "description": "Moderniser le système éducatif : appel, cotes, bulletins officiels, palmarès et rapports aux parents pour toutes vos écoles.",
   "lang": "fr",
   "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0f0820",
-  "theme_color": "#1d0f3d",
-  "categories": [
-    "education",
-    "productivity"
-  ],
+  "background_color": "#0c0d0a",
+  "theme_color": "#0c0d0a",
+  "categories": ["education", "productivity"],
   "icons": [
-    {
-      "src": "icon-192-v3.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icon-512-v3.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icon-maskable-512-v3.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
+    { "src": "racine-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "racine-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "racine-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
