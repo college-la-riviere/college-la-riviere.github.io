@@ -284,11 +284,11 @@
 
   /* ---------- Téléchargements : partage direct (WhatsApp…) ou enregistrement ---------- */
   const downloads = {
-    async save({ filename, data }) {
+    async save({ filename, data, text }) {
       const blob = data instanceof Blob ? data : new Blob([data]);
       const file = new File([blob], filename, { type: blob.type || 'application/pdf' });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try { await navigator.share({ files: [file], title: filename }); return; }
+        try { await navigator.share(text ? { files: [file], title: filename, text } : { files: [file], title: filename }); return; }
         catch (e) { if (e && e.name === 'AbortError') throw { code: 'declined' }; }
       }
       const url = URL.createObjectURL(file), a = document.createElement('a');

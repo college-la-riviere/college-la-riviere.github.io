@@ -801,6 +801,11 @@ table.pres td.hr b{color:var(--good);font-size:15px;margin-right:6px}
 .aitag{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:800;color:var(--soft-ink);background:var(--soft);border-radius:99px;padding:4px 8px}
 .chipb.sm{padding:5px 10px;font-size:12px}
 .aibox{display:flex;flex-direction:column;gap:8px}
+.sn-sym{flex-wrap:wrap;overflow:visible}
+.sn-dec{display:flex;border-radius:20px}.sn-dec button{flex:1 1 auto}
+.sn-li{align-items:flex-start}.sn-li .pill{flex:none;margin-top:2px}
+.sn-motif{display:block;margin-top:4px;font-size:13px;color:var(--ink);opacity:.85;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sn-k b{font-size:17px!important}.sn-k b.sn-dc{font-size:13.5px!important;line-height:1.25;padding-top:3px}
 .aiprop{background:var(--sunk);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
 .aiprop p{margin:0;line-height:1.4}
 
@@ -911,8 +916,8 @@ const APPRE=[['','—'],['E','E · Élite'],['TB','TB · Très bien'],['B','B ·
 
 const JOURS=['D','L','M','M','J','V','S'];
 const MOIS=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
-const COLS={classes:'classes',affectations:'affect',inscriptions:'inscr',eleves:'eleves',notes:'notes',registres:'regs',appel:'appel',config:'config',journal:'journal',signatures:'sigs',personnel:'agents',presence:'presence',rapports:'rapports'};
-const S={ready:false,demo:false,sim:false,demoRole:'dir',me:{id:null,dir:false},classes:{},affect:{},inscr:{},eleves:{},notes:{},regs:{},appel:{},config:{},journal:{},sigs:{},agents:{},presence:{},rapports:{},rMois:'',rEl:'',pDate:'',pKey:'t1',pVue:'cl',fAct:'',seenAt:'',
+const COLS={classes:'classes',affectations:'affect',inscriptions:'inscr',eleves:'eleves',notes:'notes',registres:'regs',appel:'appel',config:'config',journal:'journal',signatures:'sigs',personnel:'agents',presence:'presence',rapports:'rapports',sante:'sante'};
+const S={ready:false,demo:false,sim:false,demoRole:'dir',me:{id:null,dir:false},classes:{},affect:{},inscr:{},eleves:{},notes:{},regs:{},appel:{},config:{},journal:{},sigs:{},agents:{},presence:{},rapports:{},sante:{},sq:'',sCls:'',rMois:'',rEl:'',pDate:'',pKey:'t1',pVue:'cl',fAct:'',seenAt:'',
   view:'accueil',pid:'',pBack:'',cid:'',ctab:'appel',tri:'t1',cours:'',sel:'',vieMode:'app',bTri:'t1',q:'',gq:'',fCls:'',aReg:'',aVue:'reg',aMois:''};
 let db=null,user=null;
 
@@ -961,6 +966,7 @@ const ICONS={
  expand:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
  bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10.3 20a1.9 1.9 0 0 0 3.4 0"/>',
  pen2:'<path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/>',
+ med:'<rect x="3.5" y="6.5" width="17" height="13.5" rx="3"/><path d="M9 6.5V4.5h6v2M12 10.2v6.6M8.7 13.5h6.6"/>',
  phone:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>'
 };
 const NAVI={
@@ -1103,7 +1109,7 @@ const NAVST={done:false,cur:null};
 function navHtml(){
   if(gated())return '';
   const t=isDir()?[['accueil','Accueil','home'],['classes','Classes','grid'],['activite','Activité','bell'],['eleves','Élèves','users'],['gestion','Administration','admin']]:[['prof','Mon profil','shield'],['maclasse','Ma classe','grid']];
-  const cur=S.view==='classe'?(isDir()?'classes':'maclasse'):S.view==='prof'||S.view==='presence'?(isDir()?'gestion':'prof'):S.view;
+  const cur=S.view==='classe'?(isDir()?'classes':'maclasse'):S.view==='prof'||S.view==='presence'||S.view==='sante'?(isDir()?'gestion':'prof'):S.view;
   const nb=isDir()?unseen():0;
   const me=ensList().find(p=>p.id===meId())||(isDir()?ensList().find(p=>isGest(p)&&/direct/i.test(p.matiere||'')):null);
   const first=!NAVST.done,moved=NAVST.cur!==cur;NAVST.done=true;NAVST.cur=cur;
@@ -1125,7 +1131,7 @@ function screen(){
     if(!mesClasses().length)return band({kicker:'Espace enseignant',title:'Demande envoyée'})+page(`<div class="card empty"><div class="av lg g">${h(initials({nom:S.inscr[meId()].nom}))}</div><h3>Bonjour ${h(S.inscr[meId()].nom)}</h3><p class="muted">La direction doit vous attribuer votre classe. Elle apparaîtra ici automatiquement.</p></div>`);
   }
   if(!isDir()){const mine=mesClasses();if(!['prof','classe'].includes(S.view)||(S.view==='classe'&&!mine.includes(S.cid))){S.view='prof';S.pid=meId()}if(S.view==='prof')S.pid=meId()}
-  return ({accueil:vAccueil,classes:vClasses,classe:vClasse,eleves:vEleves,gestion:vGestion,prof:vProf,activite:vActivite,presence:vPresence})[S.view]();
+  return ({accueil:vAccueil,classes:vClasses,classe:vClasse,eleves:vEleves,gestion:vGestion,prof:vProf,activite:vActivite,presence:vPresence,sante:vSante})[S.view]();
 }
 function inscription(){return `<div class="card pad stack">
   <p class="muted small" style="margin:0">La direction verra votre demande et vous attribuera votre classe.</p>
@@ -1150,6 +1156,7 @@ function vAccueil(){
    <section class="card summary">
     <div class="sum3 num"><div><b>${ids.length}</b><span>Classes</span></div><div><b>${nbEl}</b><span>Élèves</span></div><div><b>${nbEns}</b><span>Enseignants</span></div></div>
     ${isDir()?(()=>{const L=personnel(),td=today();const n=L.filter(p=>S.presence[pid2(td,p.id)]).length;return `<button class="li actsum" data-act="go" data-v="presence"><span class="ib g">${ic('users',22)}</span><span class="grow"><span class="ttl" style="display:block">Présence du personnel</span><span class="muted small num">Aujourd’hui : ${n} présent${n>1?'s':''} sur ${L.length}</span></span><span class="chev">${ic('chev',18)}</span></button>`})():''}
+    ${isDir()?(()=>{const td=today();const L=santeList();const n=L.filter(x=>x.date===td).length,w=L.filter(x=>!x.envoyeAt).length;return `<button class="li actsum" data-act="go" data-v="sante"><span class="ib g">${ic('med',22)}</span><span class="grow"><span class="ttl" style="display:block">Cahier de sortie · santé</span><span class="muted small num">Aujourd’hui : ${n} élève${n>1?'s':''} malade${n>1?'s':''}${w?` · ${w} PDF à envoyer`:''}</span></span><span class="chev">${ic('chev',18)}</span></button>`})():''}
     ${isDir()?(()=>{const td=today(),ci=classIds();const a=ci.filter(c=>appelClos(c,td)).length,cc=ci.filter(c=>cotesClos(c,td)).length,nb=unseen();return `<button class="li actsum" data-act="go" data-v="activite"><span class="ib g">${ic('bell',22)}</span><span class="grow"><span class="ttl" style="display:block">Activité du jour</span><span class="muted small num">Appel clôturé : ${a}/${ci.length} classes · Cotes : ${cc}/${ci.length}</span></span>${nb?`<span class="pill acc num">${nb} nouveau${nb>1?'x':''}</span>`:''}<span class="chev">${ic('chev',18)}</span></button>`})():''}
     <button class="gcta" data-act="go" data-v="classes"><span><b>Voir les classes</b><small>Choisissez une classe pour ouvrir son registre d’appel, son cahier de cotes et ses bulletins.</small></span><i>${ic('chev',22)}</i></button>
    </section>
@@ -1356,6 +1363,7 @@ function vGestion(){
   const sansModele=ids.filter(c=>!S.classes[c].grille);const ec=S.config.ecole||{};
   return band({back:'accueil',kicker:'Direction',title:'Gestion de l’école',sub:'Classes, branches, enseignants et informations du bulletin'})+page(`
   <button class="gcta" data-act="go" data-v="presence"><span><b>Présence du personnel</b><small>Chaque jour : administration, enseignants et travailleurs signent leur présence. L’heure s’enregistre seule.</small></span><i>${ic('chev',22)}</i></button>
+  <button class="gcta" data-act="go" data-v="sante"><span><b>Cahier de sortie</b><small>Élèves malades : enregistrez l’heure, la date, le motif de sortie et les conseils aux parents (avec l’IA). La fiche part en PDF sur WhatsApp.</small></span><i>${ic('med',22)}</i></button>
   ${S.demo?'':`<section class="card pad stack"><div style="display:flex;gap:14px;align-items:center"><span class="ib g">${ic('chart',22)}</span><div><b>Simulation complète</b><p class="muted small" style="margin:2px 0 0">Testez l’application avec des élèves, des cotes et des registres fictifs dans les 6 classes. Vos vraies données ne sont pas touchées.</p></div></div><button class="btn grad" data-act="sim-start">Lancer la simulation</button></section>`}
   <section class="sec"><div class="sec-h"><h2 class="h2">Informations du bulletin</h2><span class="btns"><button class="btn sm" data-act="cal">Calendrier des périodes</button><button class="btn sm" data-act="ecole">Modifier</button></span></div>
   <div class="card pad"><dl class="kv">${[['Province éducationnelle',ec.province],['Ville',ec.ville],['Commune / Ter.',ec.commune],['Code de l’école',ec.code],['Chef d’établissement',ec.chef]].map(([l,v])=>`<dt>${l}</dt><dd>${v?h(v):'<span class="muted">À compléter</span>'}</dd>`).join('')}</dl></div></section>
@@ -1492,7 +1500,8 @@ function ficheEleve(id){
   const r=resume(id,S.classes[e.classeId]||{},'an');
   openSheet('Fiche de l’élève',`<div class="stack">
    <div class="idhead">${e.photo?`<img class="fiche-ph" src="${h(e.photo)}" alt="Photo de ${h(nomComplet(e))}">`:`<span class="fiche-ini">${h(initials(e))}</span>`}<div><h3 style="font-size:21px">${h(nomComplet(e))}</h3><div class="muted small">${h(S.classes[e.classeId]?.nom||'')} · ${e.sexe==='F'?'Fille':'Garçon'}${r.pct!=null?' · '+pctf(r.pct)+' sur l’année':''}</div></div></div>
-   <div class="btns"><button class="btn grad sm" data-act="voir-bul" data-id="${h(id)}">${ic('doc',16)} Voir son bulletin</button><button class="btn grad sm" data-act="rapport" data-id="${h(id)}">${ic('cal',16)} Rapport de l’élève</button><button class="btn sm" data-act="edit-eleve" data-id="${h(id)}">Modifier</button></div>
+   <div class="btns"><button class="btn grad sm" data-act="voir-bul" data-id="${h(id)}">${ic('doc',16)} Voir son bulletin</button><button class="btn grad sm" data-act="rapport" data-id="${h(id)}">${ic('cal',16)} Rapport de l’élève</button><button class="btn sm" data-act="edit-eleve" data-id="${h(id)}">Modifier</button>${isDir()?`<button class="btn sm" data-act="sante-eleve" data-id="${h(id)}">${ic('med',16)} Élève malade</button>`:''}</div>
+   ${isDir()?(()=>{const L=santeList().filter(x=>x.eleveId===id);return L.length?`<div class="card list"><div class="pad eyebrow" style="padding-bottom:0">Sorties pour raison de santé · ${L.length}</div>${L.map(x=>`<button class="li" data-act="sante-open" data-id="${h(x.id)}"><span class="ib">${ic('med',18)}</span><span class="grow"><span class="ttl" style="display:block">${h(dfr(x.date))} · ${h(x.heure||'')}</span><span class="muted small">${h(santeMotif(x))}</span></span><span class="chev">${ic('chev',18)}</span></button>`).join('')}</div>`:''})():''}
    <div class="card pad"><div class="eyebrow" style="margin-bottom:10px">Identité</div><dl class="kv">${kv('Nom',e.nom)}${kv('Postnom',e.postnom)}${kv('Prénom',e.prenom)}${kv('Sexe',e.sexe==='F'?'Féminin':'Masculin')}${kv('Né(e) à',e.lieuNaissance)}${kv('le',dn)}${kv('Nationalité',e.nationalite)}${kv('N° Perm.',e.matricule)}${kv('N° ID',e.numId)}</dl></div>
    <div class="card pad"><div class="eyebrow" style="margin-bottom:10px">Famille et contact</div><dl class="kv">${kv('Père',e.pere)}${kv('Mère',e.mere)}${kv('Tuteur',e.tuteur)}${kv('Téléphone',e.telephone)}${kv('Adresse',e.adresse)}</dl></div>
    <button class="btn danger" data-act="del-eleve" data-id="${h(id)}">Supprimer cet élève</button></div>`);
@@ -1982,6 +1991,113 @@ function calSheet(){
    ${Object.keys(CAL_DEF).map(k=>{const [a,b]=calOf(k);return `<div class="field"><label>${CAL_LBL[k]}</label><div class="grid2"><input class="inp" type="date" name="${k}_a" value="${a}" aria-label="${CAL_LBL[k]} : début"><input class="inp" type="date" name="${k}_b" value="${b}" aria-label="${CAL_LBL[k]} : fin"></div></div>`}).join('')}
    <button class="btn grad" type="submit">Enregistrer le calendrier</button></form>`);
 }
+/* ---------- Cahier de sortie : élèves malades (direction) ---------- */
+const SYMPT=['Fièvre','Maux de tête','Maux de ventre','Vomissements','Diarrhée','Toux','Rhume','Fatigue','Vertiges','Blessure','Mal aux yeux','Boutons sur la peau'];
+const DECIS=[['maison','Renvoyé à la maison'],['centre','Conduit au centre de santé'],['repos','Repos à l’école']];
+const dfrL=s=>{const d=D(s);return JLONG[d.getUTCDay()]+' '+d.getUTCDate()+' '+MOIS[d.getUTCMonth()]+' '+d.getUTCFullYear()};
+const nowHM=()=>{const n=new Date();return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')};
+function santeList(){return Object.entries(S.sante).map(([id,x])=>({id,...x})).sort((a,b)=>((b.date||'')+(b.heure||'')).localeCompare((a.date||'')+(a.heure||'')))}
+const santeEl=x=>S.eleves[x.eleveId]||{nom:x.nom||'Élève',prenom:'',sexe:x.sexe||'M',classeId:x.classeId};
+const santeMotif=x=>{const s=(x.symptomes||[]).join(', ');return s&&x.motif?s+' · '+x.motif:s||x.motif||''};
+const ageOf=e=>{if(!e?.dateNaissance)return null;const b=new Date(e.dateNaissance+'T12:00'),n=new Date();let a=n.getFullYear()-b.getFullYear();if(n.getMonth()<b.getMonth()||(n.getMonth()===b.getMonth()&&n.getDate()<b.getDate()))a--;return a>0&&a<30?a:null};
+const santeBy=()=>{const p=ensList().find(x=>x.id===meId())||(S.demo?ensList().find(x=>isGest(x)&&/direct/i.test(x.matiere||'')):null);return{nom:p?.nom||'La direction',fn:p?.matiere||'Direction',sig:p?.signature||''}};
+const waNum=t=>{let d=String(t||'').replace(/\D/g,'');if(d.startsWith('00'))d=d.slice(2);if(d.length===10&&d[0]==='0')d='243'+d.slice(1);else if(d.length===9)d='243'+d;return d.length>=11?d:''};
+function vSante(){
+  if(!isDir()){S.view='prof';return screen()}
+  const L=santeList();const td=today();const auj=L.filter(x=>x.date===td);
+  const q=(S.sq||'').trim().toLowerCase();const F=q?L.filter(x=>(nomComplet(santeEl(x))+' '+(S.classes[x.classeId]?.nom||'')+' '+santeMotif(x)).toLowerCase().includes(q)):L;
+  const days=[...new Set(F.map(x=>x.date))];
+  const item=x=>{const e=santeEl(x);const dc=DECIS.find(d=>d[0]===x.decision);return `<button class="li sn-li" data-act="sante-open" data-id="${h(x.id)}">${avEl(e)}<span class="grow"><span class="ttl" style="display:block">${h(nomComplet(e))}</span><span class="muted small">${h(S.classes[x.classeId]?.nom||x.classeNom||'')} · ${h(x.heure||'')}${dc?' · '+h(dc[1]):''}</span><span class="sn-motif">${h(santeMotif(x)||'Motif non précisé')}</span></span>${x.envoyeAt?'<span class="pill good">PDF envoyé</span>':'<span class="pill warn">À envoyer</span>'}</button>`};
+  return band({back:'gestion',kicker:'Direction',title:'Cahier de sortie',sub:`Élèves malades · aujourd’hui : ${auj.length} sortie${auj.length>1?'s':''}`})+page(`
+   <button class="gcta" data-act="sante-new"><span><b>Enregistrer un élève malade</b><small>Date, heure, motif de la sortie et conseils aux parents, avec l’aide de l’IA. La fiche part en PDF sur WhatsApp.</small></span><i>${ic('plus',22)}</i></button>
+   <div class="card pad stack"><div class="sum3 num"><div><b>${auj.length}</b><span>Aujourd’hui</span></div><div><b>${L.filter(x=>x.date>=td.slice(0,7)+'-01').length}</b><span>Ce mois</span></div><div><b>${L.filter(x=>!x.envoyeAt).length}</b><span>PDF à envoyer</span></div></div>
+    ${L.length?`<input class="inp" id="sq" type="search" value="${h(S.sq||'')}" placeholder="Chercher un élève, une classe, un motif…" aria-label="Chercher dans le cahier de sortie">`:''}</div>
+   ${!L.length?`<div class="card empty"><span class="ib g">${ic('med',22)}</span><h3>Aucune sortie enregistrée</h3><p class="muted small">Quand un élève tombe malade, enregistrez ici l’heure, le motif et les conseils pour ses parents. La fiche est gardée jusqu’à la fin de l’année.</p></div>`
+    :!F.length?`<div class="card pad muted small">Aucun résultat pour « ${h(S.sq)} ».</div>`
+    :days.map(d=>`<section class="sec"><h2 class="h2" style="font-size:18px">${d===td?'Aujourd’hui · ':''}${h(dfrL(d))}</h2><div class="card list">${F.filter(x=>x.date===d).map(item).join('')}</div></section>`).join('')}`);
+}
+function santeForm(id,eid0){
+  const x=id?S.sante[id]:null;if(id&&!x)return;
+  const e0=x?S.eleves[x.eleveId]:eid0?S.eleves[eid0]:null;
+  const cid=x?.classeId||e0?.classeId||S.sCls||classIds()[0]||'';
+  const sym=new Set(x?.symptomes||[]);const dec=x?.decision||'maison';
+  const opts=c=>elevesOf(c).map(e=>`<option value="${h(e.id)}" ${e.id===(x?.eleveId||eid0)?'selected':''}>${h(nomComplet(e))}</option>`).join('');
+  openSheet(id?'Modifier la sortie':'Élève malade · sortie',`<form id="f-sante" class="stack" data-id="${h(id||'')}">
+   <div class="grid2"><div class="field"><label for="s-cls">Classe</label><select class="inp" id="s-cls">${classIds().map(c=>`<option value="${h(c)}" ${c===cid?'selected':''}>${h(S.classes[c].nom)}</option>`).join('')}</select></div>
+    <div class="field"><label for="s-el">Élève</label><select class="inp" id="s-el" name="eleveId" required>${opts(cid)||'<option value="">Aucun élève</option>'}</select></div></div>
+   <div class="grid2"><div class="field"><label for="s-date">Date</label><input class="inp" type="date" id="s-date" name="date" required value="${h(x?.date||today())}"></div>
+    <div class="field"><label for="s-heure">Heure de sortie</label><input class="inp" type="time" id="s-heure" name="heure" required value="${h(x?.heure||nowHM())}"></div></div>
+   <div class="field"><label>Ce que l’élève ressent</label><div class="chips sn-sym" role="group" aria-label="Symptômes">${SYMPT.map(s=>`<button type="button" class="chipb sm" data-act="sante-sym" data-v="${h(s)}" aria-pressed="${sym.has(s)}">${h(s)}</button>`).join('')}</div><input type="hidden" name="symptomes" value="${h([...sym].join('|'))}"></div>
+   <div class="field"><label for="s-motif">Motif de la sortie</label><textarea class="inp ta" id="s-motif" name="motif" rows="2" placeholder="Ex. L’élève s’est plaint de forte fièvre pendant la récréation.">${h(x?.motif||'')}</textarea></div>
+   <div class="grid2"><div class="field"><label for="s-temp">Température (si mesurée)</label><input class="inp num" id="s-temp" name="temp" inputmode="decimal" placeholder="Ex. 38,5" value="${h(x?.temp||'')}"></div>
+    <div class="field"><label for="s-remis">Remis à (parent ou personne venue le chercher)</label><input class="inp" id="s-remis" name="remis" placeholder="Ex. Sa mère, Mme KIALA" value="${h(x?.remis||'')}"></div></div>
+   <div class="field"><label>Décision</label><div class="seg sn-dec" role="group" aria-label="Décision">${DECIS.map(([k,l])=>`<button type="button" data-act="sante-dec" data-v="${k}" aria-pressed="${dec===k}">${l}</button>`).join('')}</div><input type="hidden" name="decision" value="${dec}"></div>
+   <div class="field"><label for="s-cons">Conseils à donner aux parents</label><textarea class="inp ta" id="s-cons" name="conseils" rows="4" placeholder="Écrivez vos conseils, ou touchez « Rédiger avec l’IA ».">${h(x?.conseils||'')}</textarea>
+    <div class="aibar"><span class="aitag">${ic('spark',14)} IA</span>${[['rediger','Rédiger les conseils'],['corriger','Corriger et reformuler'],['court','Plus court'],['trois','3 propositions']].map(([k,l])=>`<button type="button" class="chipb sm" data-act="sante-ai" data-v="${k}">${l}</button>`).join('')}</div></div>
+   <div id="aibox" class="aibox" aria-live="polite"></div>
+   <p class="muted small" style="margin:0">L’IA propose des conseils simples et prudents : relisez-les avant d’envoyer. Elle ne remplace pas l’avis d’un agent de santé.</p>
+   <button class="btn grad" type="submit">${id?'Enregistrer':'Enregistrer la sortie'}</button>
+   ${id?`<button type="button" class="btn danger" data-act="sante-del" data-id="${h(id)}">Supprimer cette fiche</button>`:''}</form>`,s=>{
+    s.querySelector('#s-cls').addEventListener('change',ev=>{S.sCls=ev.target.value;s.querySelector('#s-el').innerHTML=opts(ev.target.value)||'<option value="">Aucun élève</option>'})});
+}
+let sAiCtl=null;
+async function santeAI(mode){
+  const f=$('#f-sante');const box=$('#aibox');const ta=$('#s-cons');if(!f||!box||!ta)return;
+  const fd=Object.fromEntries(new FormData(f));const e=S.eleves[fd.eleveId];
+  const sample=window.claude?.use?await claude.use('sample').catch(()=>null):null;
+  if(!sample){box.innerHTML='<p class="muted small">L’assistant IA n’est pas disponible ici.</p>';return}
+  const sym=(fd.symptomes||'').split('|').filter(Boolean);const age=ageOf(e);const dc=DECIS.find(d=>d[0]===fd.decision);
+  const ctx=`Élève : ${e?.prenom||'l’élève'} (${e?.sexe==='F'?'fille':'garçon'}${age?', '+age+' ans':''}), ${S.classes[e?.classeId]?.nom||''}. Symptômes observés : ${sym.join(', ')||'non précisés'}. Motif de la sortie : ${(fd.motif||'').trim().replace(/[.\s]+$/,'')||'non précisé'}.${fd.temp?.trim()?' Température mesurée : '+fd.temp.trim()+' °C.':''} Décision de l’école : ${dc?dc[1]:'renvoyé à la maison'}. Heure de sortie : ${fd.heure||''}.`;
+  const base=ta.value.trim();
+  const consigne={rediger:base?'Améliore et complète ces conseils.':'Rédige les conseils à donner aux parents.',corriger:'Corrige l’orthographe et la grammaire, puis reformule clairement, sans changer le sens.',court:'Rends ces conseils plus courts (3 phrases maximum), en gardant l’essentiel.',trois:'Propose 3 versions différentes des conseils.'}[mode];
+  const prompt=`Tu aides la direction d’une école primaire en République démocratique du Congo à écrire les conseils donnés aux parents d’un élève renvoyé ou soigné pour raison de santé. Le texte sera envoyé aux parents par WhatsApp dans une fiche PDF. Écris en français simple, au vouvoiement, avec un ton rassurant et respectueux, en 3 à 6 phrases courtes.\n\nRègles de prudence obligatoires : ne pose aucun diagnostic ; ne cite aucun nom de médicament et aucune dose ; donne seulement des conseils de bon sens (repos, boire de l’eau propre, surveiller la température, manger léger, hygiène des mains, garder l’enfant à la maison s’il est contagieux) adaptés aux symptômes ; recommande de consulter un centre de santé ou un médecin, et dis d’y aller sans attendre en cas de signes graves (fièvre forte ou qui dure plus de 2 jours, convulsions, difficulté à respirer, vomissements répétés, enfant très faible ou somnolent, sang dans les selles) ; invite les parents à informer l’école de l’évolution et à présenter un mot ou un certificat au retour. N’invente aucun fait qui n’est pas dans le contexte.\n\nContexte : ${ctx}\n\nConseils déjà écrits par la direction : ${base||'(aucun)'}\n\nConsigne : ${consigne}\n\nRéponds uniquement avec un tableau JSON de ${mode==='trois'?'3 textes':'1 texte'} (chaînes), par exemple ["…"].`;
+  sAiCtl?.abort();sAiCtl=new AbortController();
+  box.innerHTML='<p class="muted small">L’assistant rédige les conseils…</p>';
+  try{const out=await sample.json(prompt,{signal:sAiCtl.signal,modelTier:'quick'});const list=(Array.isArray(out)?out:[out]).map(String).filter(Boolean).slice(0,3);
+    box._list=list;box.innerHTML=list.map((t,i)=>`<div class="aiprop"><p>${h(t).replace(/\n/g,'<br>')}</p><button type="button" class="btn sm grad" data-act="sante-aiuse" data-i="${i}">Utiliser ce texte</button></div>`).join('')||'<p class="muted small">Aucune proposition. Réessayez.</p>';
+  }catch(err){const m={not_granted:'Vous avez refusé l’accès à l’assistant.',rate_limited:'Limite d’utilisation atteinte. Réessayez plus tard.',cancelled:''}[err?.code];box.innerHTML=m===''?'':`<p class="muted small">${m||'L’assistant n’a pas pu répondre. Réessayez.'}</p>`}
+}
+function santePaper(id){
+  const x=S.sante[id];const e=santeEl(x);const cls=S.classes[x.classeId];const dc=DECIS.find(d=>d[0]===x.decision);const ec=S.config.ecole||{};
+  const age=ageOf(e);const par=[e.pere&&'Père : '+e.pere,e.mere&&'Mère : '+e.mere,e.tuteur&&'Tuteur : '+e.tuteur].filter(Boolean).join(' · ');
+  return `<div class="ob rp sn-paper">
+   <div class="ob-top"><img src="${eLogo()}" alt=""><div class="ob-tt"><div>${h(ECO().nom)}</div><div>Fiche de sortie · Santé de l’élève</div><div>Année scolaire ${ANNEE.replace('–',' - ')}</div></div><img src="${eLogo()}" alt=""></div>
+   <div class="rp-id">${e.photo?`<img class="rp-ph" src="${h(e.photo)}" alt="">`:''}<div><b>${h(nomComplet(e))}</b><span>${h(cls?.nom||x.classeNom||'')} · ${e.sexe==='F'?'Fille':'Garçon'}${age?' · '+age+' ans':''}${e.matricule?' · N° Perm. '+h(e.matricule):''}</span>${par?`<span>${h(par)}</span>`:''}${e.telephone?`<span>Téléphone des parents : ${h(e.telephone)}</span>`:''}</div></div>
+   <div class="rp-sec"><h4>1. La sortie</h4><div class="rp-kpis sn-k"><div><b>${h(dfr(x.date))}</b><span>${h(D(x.date).getUTCFullYear())} · ${h(JLONG[D(x.date).getUTCDay()])}</span></div><div><b>${h(x.heure||'—')}</b><span>heure de sortie</span></div><div><b>${x.temp?h(String(x.temp).replace('.',','))+' °C':'—'}</b><span>température</span></div><div><b class="sn-dc">${h(dc?dc[1]:'—')}</b><span>décision</span></div></div></div>
+   <div class="rp-sec"><h4>2. Motif de la sortie</h4>${(x.symptomes||[]).length?`<p class="rp-note" style="margin:0 0 6px"><b>Symptômes :</b> ${h(x.symptomes.join(', '))}</p>`:''}<p class="rp-box">${x.motif?h(x.motif).replace(/\n/g,'<br>'):'—'}</p></div>
+   <div class="rp-sec"><h4>3. Conseils aux parents</h4><p class="rp-box">${x.conseils?h(x.conseils).replace(/\n/g,'<br>'):'—'}</p>
+    <p class="rp-note">Ces conseils ne remplacent pas l’avis d’un agent de santé. Si l’état de l’enfant s’aggrave, conduisez-le sans attendre au centre de santé le plus proche, puis informez l’école.</p></div>
+   <div class="rp-sign" style="grid-template-columns:1fr 1fr"><div>Pour la direction${x.bySig?`<br><img class="rp-sig" src="${h(x.bySig)}" alt="">`:''}<br><small>${h(x.byNom||ec.chef||'')}${x.byFn?' · '+h(x.byFn):''}</small></div><div>Enfant remis à<br><small>${x.remis?h(x.remis):'………………………………'}</small></div></div>
+  </div>`;
+}
+function santeTexte(id){const x=S.sante[id];const e=santeEl(x);const dc=DECIS.find(d=>d[0]===x.decision);
+  return `*${ECO().nom} · Fiche de sortie (santé)*\n\nBonjour, chers parents de ${nomComplet(e)} (${S.classes[x.classeId]?.nom||''}).\n\nVotre enfant est sorti${e.sexe==='F'?'e':''} de l’école le ${dfrL(x.date).toLowerCase()} à ${x.heure||'—'} pour raison de santé.\n*Motif* : ${santeMotif(x)||'—'}${x.temp?`\n*Température* : ${String(x.temp).replace('.',',')} °C`:''}\n*Décision* : ${dc?dc[1]:'—'}${x.remis?`\n*Remis à* : ${x.remis}`:''}\n\n*Conseils*\n${x.conseils||'—'}\n\nMerci de nous informer de son évolution.\n${x.byNom||'La direction'}`}
+function santeFiche(id){
+  const x=S.sante[id];if(!x)return closeSheet();const e=santeEl(x);const num=waNum(e.telephone);
+  openSheet('Fiche de sortie · santé',`<div class="stack">
+   <div class="idhead">${avEl(e,'lg')}<div><b>${h(nomComplet(e))}</b><div class="muted small">${h(S.classes[x.classeId]?.nom||'')} · ${h(dfr(x.date))} à ${h(x.heure||'')}</div></div></div>
+   <div class="btns"><button class="btn grad" data-act="sante-pdf" data-id="${h(id)}">${ic('doc',16)} Envoyer le PDF sur WhatsApp</button><button class="btn sm" data-act="sante-edit" data-id="${h(id)}">${ic('pen2',16)} Modifier</button></div>
+   <div class="btns">${num?`<button class="btn sm" data-act="sante-wa" data-id="${h(id)}">Écrire au parent (${h(e.telephone)})</button>`:''}<button class="btn sm" data-act="sante-copy" data-id="${h(id)}">Copier le message</button></div>
+   <p class="muted small" style="margin:0">${x.envoyeAt?`PDF envoyé le ${new Date(x.envoyeAt).toLocaleDateString('fr-FR')} à ${hm(x.envoyeAt)}. `:''}Touchez « Envoyer le PDF », choisissez WhatsApp puis le parent : la fiche lui arrive directement.${num?'':' Ajoutez le téléphone des parents dans la fiche de l’élève pour pouvoir leur écrire directement.'}</p>
+   <div class="fitbox">${santePaper(id)}</div></div>`,()=>applyFit());
+}
+async function santePDF(id){
+  const x=S.sante[id];if(!x)return;const e=santeEl(x);
+  const dl=window.claude?.use?await claude.use('downloads').catch(()=>null):null;
+  if(!dl){toast('Le partage n’est pas disponible ici. Utilisez « Copier le message ».');return}
+  toast('Préparation du PDF…');
+  try{await loadLibs()}catch(err){toast('Impossible de préparer le PDF pour le moment. Vérifiez la connexion et réessayez.');return}
+  const host=document.createElement('div');host.style.cssText='position:fixed;left:-10000px;top:0;width:794px;background:#fff';host.innerHTML=santePaper(id);document.body.appendChild(host);
+  const node=host.firstElementChild;node.style.width='794px';
+  try{const cv=await html2canvas(node,{scale:2,backgroundColor:'#ffffff',useCORS:true});
+    const {jsPDF}=window.jspdf;const pdf=new jsPDF({unit:'mm',format:'a4'});const mg=8;const iw=210-2*mg;let ih=cv.height*iw/cv.width,w=iw;
+    if(ih>297-2*mg){w=iw*(297-2*mg)/ih;ih=297-2*mg}
+    pdf.addImage(cv.toDataURL('image/jpeg',.92),'JPEG',(210-w)/2,mg,w,ih);
+    const blob=pdf.output('blob');const name=`Fiche de sortie santé - ${nomComplet(e)} - ${x.date}.pdf`;
+    try{await dl.save({filename:name,data:blob,text:santeTexte(id)});await put('sante',id,{...S.sante[id],envoyeAt:new Date().toISOString()});toast('Fiche prête. Choisissez WhatsApp puis le parent.')}catch(err){if(err?.code!=='declined')toast('Le PDF n’a pas pu être partagé.')}
+  }catch(err){toast('Impossible de créer le PDF. Réessayez.')}finally{host.remove()}
+}
+function santeOpenWA(id){const x=S.sante[id];const e=santeEl(x);const n=waNum(e.telephone);if(!n)return;const a=document.createElement('a');a.href=`https://wa.me/${n}?text=${encodeURIComponent(santeTexte(id))}`;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove()}
 /* ---------- Assistant IA pour les textes aux parents ---------- */
 const AI_MODES=[['corriger','Corriger et reformuler'],['court','Plus court'],['chaleureux','Plus chaleureux'],['ferme','Plus ferme'],['trois','3 propositions']];
 let aiCtl=null;
@@ -2158,7 +2274,9 @@ function simData(){
   const presence={};['sim-dir','sim-t1','sim-t3','demo-ens','sim-ag1'].forEach((pid,i)=>{presence[pid2(td,pid)]={date:td,personId:pid,nom:(inscr[pid]||agents[pid]).nom,img:scrib(),at:td+'T07:'+String(12+i*6).padStart(2,'0')+':00',by:''}});
   {const ids=[...Object.keys(inscr),...Object.keys(agents)];const dd=new Date('2026-09-01T00:00:00Z');const sg=scrib();
    while(iso(dd)<td){const w=dd.getUTCDay(),x=iso(dd);if(w>0&&w<6)for(const pid of ids)if(R()<.9)presence[pid2(x,pid)]={date:x,personId:pid,nom:(inscr[pid]||agents[pid]).nom,img:sg,at:x+'T07:'+String(Math.floor(R()*55)).padStart(2,'0')+':00',by:''};dd.setUTCDate(dd.getUTCDate()+1)}}
-  return{classes,eleves,notes,regs,appel,inscr,affect,journal,sigs,agents,presence,rapports};
+  const sante={};{const el=Object.entries(eleves);const S1=[[0,'09:40',['Fièvre','Maux de tête'],'Fièvre apparue pendant la récréation, l’élève ne pouvait plus suivre.','38,6','maison','Sa mère','Gardez l’enfant au repos à la maison et faites-le boire souvent de l’eau propre. Surveillez sa température. Si la fièvre reste forte ou dure plus de 2 jours, conduisez-le au centre de santé. Merci de nous informer de son évolution.',true],[1,'11:15',['Maux de ventre','Vomissements'],'A vomi deux fois en classe.','','centre','Son oncle','Faites-le boire par petites gorgées et donnez-lui un repas léger. Consultez le centre de santé si les vomissements continuent.',false]];
+   S1.forEach(([k,hr,sy,mo,tp,dc,rm,co,sent],i)=>{const [eid,e]=el[(k*17+5)%el.length];const d=i?td:joursOuvres('2026-10-05').filter(x=>x<td).slice(-1)[0]||td;sante['sim-s'+i]={eleveId:eid,classeId:e.classeId,nom:nomComplet(e),classeNom:classes[e.classeId]?.nom||'',date:d,heure:hr,symptomes:sy,motif:mo,temp:tp,remis:rm,decision:dc,conseils:co,byNom:inscr['sim-dir']?.nom||'La direction',byFn:'Directeur',bySig:'',by:'',at:d+'T'+hr+':00',...(sent?{envoyeAt:d+'T'+hr+':30'}:{})}})}
+  return{classes,eleves,notes,regs,appel,inscr,affect,journal,sigs,agents,presence,rapports,sante};
 }
 const SIMCFG={ecole:{province:'Kinshasa – Funa',ville:'Kinshasa',commune:'Limete',code:'',chef:''}};
 function demoData(){S.demo=true;Object.assign(S,simData());S.config=SIMCFG;S.ready=true;render()}
@@ -2246,6 +2364,18 @@ const A={
   rapport:b=>rapportSheet(b.dataset.id),
   rkey:b=>rapportSheet(S.rEl,b.dataset.v),
   ai:b=>aiRewrite(b.dataset.f,b.dataset.v),
+  'sante-new':()=>santeForm(''),
+  'sante-open':b=>santeFiche(b.dataset.id),
+  'sante-edit':b=>santeForm(b.dataset.id),
+  'sante-eleve':b=>santeForm('',b.dataset.id),
+  'sante-del':async b=>{if(!arm(b))return;await del('sante',b.dataset.id);closeSheet();toast('Fiche supprimée')},
+  'sante-pdf':b=>santePDF(b.dataset.id),
+  'sante-wa':b=>santeOpenWA(b.dataset.id),
+  'sante-copy':b=>{const t=santeTexte(b.dataset.id);const done=()=>toast('Message copié. Collez-le dans WhatsApp.');try{navigator.clipboard.writeText(t).then(done,()=>fallbackCopy(t))}catch(e){fallbackCopy(t)}},
+  'sante-sym':b=>{const on=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',on);const f=b.closest('form');f.querySelector('[name=symptomes]').value=[...f.querySelectorAll('[data-act=sante-sym][aria-pressed=true]')].map(x=>x.dataset.v).join('|')},
+  'sante-dec':b=>{const f=b.closest('form');f.querySelectorAll('[data-act=sante-dec]').forEach(x=>x.setAttribute('aria-pressed',x===b));f.querySelector('[name=decision]').value=b.dataset.v},
+  'sante-ai':b=>santeAI(b.dataset.v),
+  'sante-aiuse':b=>{const l=$('#aibox')._list||[];const t=l[+b.dataset.i];if(t==null)return;$('#s-cons').value=t;$('#aibox').innerHTML='';toast('Conseils insérés. Relisez puis enregistrez.')},
   aiuse:b=>{const l=$('#aibox')._list||[];const t=l[+b.dataset.i];if(t==null)return;const ta=document.getElementById(b.dataset.f==='consignes'?'r-cs':'r-ct');ta.value=t;$('#aibox').innerHTML='';toast('Texte inséré. Touchez « Enregistrer le rapport ».')},
   rsign:b=>{S.fromRap=true;signSheet(b.dataset.id)},
   cal:()=>calSheet(),
@@ -2293,9 +2423,14 @@ document.addEventListener('pointerover',ev=>{const b=ev.target.closest&&ev.targe
 document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&FS.open){closeBulFS();return}if(ev.key==='Escape'&&!$('#sheet').hidden)closeSheet();
   if(ev.key==='Enter'&&ev.target.classList?.contains('gi')){ev.preventDefault();const all=[...document.querySelectorAll('.etab .gi')];const i=all.indexOf(ev.target);const cols=ev.target.closest('tr').querySelectorAll('.gi').length;const nx=all[i+cols]||all[i+1];nx?.focus();nx?.select?.()}});
 document.addEventListener('change',ev=>{const t=ev.target;if(t.dataset.act==='areg'){S.aReg=t.value;render()}if(t.dataset.act==='prevens'){S.demoEns=t.value;S.view='prof';S.pid=t.value;render();scrollTo(0,0)}if(t.dataset.act==='mcours'){S.cours=t.value;render()}});
-document.addEventListener('input',ev=>{const t=ev.target;if(t.id==='gq'){S.gq=t.value;render()}if(t.classList.contains('gi'))gradeInput(t)});
+document.addEventListener('input',ev=>{const t=ev.target;if(t.id==='gq'){S.gq=t.value;render()}if(t.id==='sq'){S.sq=t.value;render()}if(t.classList.contains('gi'))gradeInput(t)});
 document.addEventListener('submit',async ev=>{
   ev.preventDefault();const f=ev.target;const fd=Object.fromEntries(new FormData(f));
+  if(f.id==='f-sante'){const id=f.dataset.id||'s-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);const e=S.eleves[fd.eleveId];if(!e){toast('Choisissez l’élève.');return}
+    const old=S.sante[id]||{};const by=old.byNom?{nom:old.byNom,fn:old.byFn,sig:old.bySig}:santeBy();
+    const doc={...old,eleveId:fd.eleveId,classeId:e.classeId,nom:nomComplet(e),classeNom:S.classes[e.classeId]?.nom||'',date:fd.date,heure:fd.heure,symptomes:(fd.symptomes||'').split('|').filter(Boolean),motif:(fd.motif||'').trim(),temp:(fd.temp||'').trim(),remis:(fd.remis||'').trim(),decision:fd.decision||'maison',conseils:(fd.conseils||'').trim(),byNom:by.nom,byFn:by.fn||'',bySig:by.sig||'',by:old.by||meId(),at:old.at||new Date().toISOString()};
+    if(!doc.symptomes.length&&!doc.motif){toast('Indiquez le motif de la sortie.');return}
+    await put('sante',id,doc);toast(f.dataset.id?'Fiche mise à jour':'Sortie enregistrée');santeFiche(id);render();return}
   if(f.id==='f-ins'){await put('inscriptions',meId(),{nom:fd.nom.trim(),tel:fd.tel.trim(),matiere:fd.matiere.trim(),date:new Date().toISOString()});toast('Demande envoyée à la direction')}
   if(f.id==='f-eleve'){const id=f.dataset.id||uid();for(const k in fd)fd[k]=fd[k].trim();const old=S.eleves[id]||{};if(elvPhoto===null){if(old.photo)fd.photo=old.photo}else if(elvPhoto)fd.photo=elvPhoto;fd.nom=fd.nom.toUpperCase();fd.postnom=fd.postnom.toUpperCase();const isNew=!f.dataset.id;await put('eleves',id,fd);toast(isNew?'Élève inscrit':'Fiche mise à jour');ficheEleve(id);render()}
   if(f.id==='f-cls'){const grille=ed.grille.filter(r=>r.t!=='c'||(r.nom||'').trim()).map(r=>r.t==='c'?Object.assign({t:'c',id:r.id,nom:r.nom.trim(),max:+r.max||10},r.big?{big:true}:{}):r.t==='st'?{t:'st'}:{t:r.t,nom:(r.nom||'').trim()});const id=ed.id||uid();await put('classes',id,{nom:ed.nom.trim(),degre:ed.degre||'',grille,cours:grille.filter(r=>r.t==='c')});closeSheet();toast('Classe enregistrée')}
