@@ -584,6 +584,30 @@ table.t td.name,table.t th.name{text-align:left}
 .band-ph.tap{cursor:pointer}
 .band-phb{border:0;padding:0;background:none;border-radius:50%;cursor:pointer;flex:none}
 
+
+/* Carte « Ma journée » du profil enseignant */
+.ph-card{display:flex;flex-direction:column;gap:12px;border-radius:24px;padding:16px;background:radial-gradient(circle at 100% 0,rgba(186,162,235,.16),transparent 55%),var(--surface);border:1px solid var(--line)}
+.ph-top{display:flex;gap:12px;align-items:center}
+.ph-top small{font-size:12.5px;font-weight:700;color:var(--pm);text-transform:uppercase;letter-spacing:.06em}
+.ph-top h2{margin:2px 0 0;font-family:var(--f-d);font-weight:400;font-size:clamp(26px,7.4vw,34px);line-height:1.05;text-transform:uppercase}
+.ph-top p{margin:6px 0 0;font-size:14px;color:var(--pm)}
+.ph-ring{position:relative;width:62px;height:62px;flex:none}.ph-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ph-ring .rt{fill:none;stroke:rgba(255,255,255,.1);stroke-width:5}.ph-ring .rf{fill:none;stroke:var(--pk);stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset .6s}
+.ph-ring b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--f-d);font-weight:400;font-size:19px}.ph-ring b small{font-size:11px;color:var(--pm)}
+.ph-tasks,.ph-ann{display:flex;flex-direction:column;gap:8px}
+.ph-task,.ph-bd{display:flex;align-items:center;gap:12px;border:0;text-align:left;width:100%;cursor:pointer;background:var(--pd);color:var(--pi);border-radius:18px;padding:11px 12px;font:inherit}
+.ph-task .grow,.ph-bd .grow{display:flex;flex-direction:column;min-width:0}
+.ph-task b,.ph-bd b{font-size:14.5px;font-weight:700}.ph-task small,.ph-bd small{font-size:12.5px;color:var(--pm)}
+.ph-chk{width:28px;height:28px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:800;box-shadow:inset 0 0 0 2px rgba(196,178,236,.4)}
+.ph-task.ok .ph-chk{background:var(--pk);color:#1d0f3d;box-shadow:none}
+.ph-task.ok b{text-decoration:line-through;text-decoration-color:rgba(236,228,251,.45)}
+.ph-bd{background:linear-gradient(120deg,rgba(186,162,235,.22),rgba(131,99,198,.12))}
+.ph-bd.today{background:linear-gradient(120deg,var(--pk),var(--pk2));color:#1d0f3d}.ph-bd.today small{color:#2c1660}
+.ph-cake{width:36px;height:36px;border-radius:12px;flex:none;display:grid;place-items:center;font-size:20px;background:rgba(12,6,28,.25)}
+.ph-quote{margin:0;padding:4px 0 2px 14px;border-left:3px solid var(--pk)}
+.ph-quote blockquote{margin:0;font-size:15px;line-height:1.45;font-style:italic;color:var(--pi)}
+.ph-quote figcaption{margin-top:4px;font-size:12px;font-weight:600;color:var(--pm)}
+:is(.ph-task,.ph-bd):focus-visible{outline:2.5px solid var(--pk);outline-offset:2px}
 /* Ticket en dégradé de l'application (classe et profil) */
 .ticket.g,.prof .ticket{background:radial-gradient(circle at 108% -10%,transparent 0 70px,rgba(255,255,255,.14) 71px 96px,transparent 97px),radial-gradient(circle at -8% 120%,transparent 0 60px,rgba(255,255,255,.12) 61px 84px,transparent 85px),var(--grad);color:#fff}
 .prof .ticket .t-chip{background:rgba(12,6,28,.55);color:#ece4fb;backdrop-filter:blur(4px)}
@@ -1213,7 +1237,7 @@ function vClasse(){
      :isDir()?`<button class="pf-cta" data-act="new-ens" data-cls="${h(cid)}"><span><small>Aucun enseignant attribué</small><b>Créer le profil du titulaire</b></span><i>${ic('plus',18)} Créer</i></button>`:''}
   </div></div>`
    +`<div class="page wide flat"><div class="page-in"><nav class="ctabs pfx" aria-label="Rubriques de la classe">${tabs.map(([k,l,i],n)=>`<button class="ctab" data-act="ctab" data-v="${k}" ${S.ctab===k?'aria-current="page"':''}><small>${n+1}</small>${ic(i,18)}${l}</button>`).join('')}</nav>
-   ${({appel:tabAppel,cotes:tabCotes,bul:tabBul,palm:tabPalm,eleves:tabEleves})[S.ctab]()}</div></div>`;
+   ${(({appel:tabAppel,cotes:tabCotes,bul:tabBul,palm:tabPalm,eleves:tabEleves})[S.ctab]||(S.ctab='appel',tabAppel))()}</div></div>`;
 }
 
 /* ---- Cahier de cotes ---- */
@@ -1587,6 +1611,29 @@ const JLONG=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
 function semaineCourante(){const l=lundi(today());const d=D(l);return [0,1,2,3,4].map(i=>{const x=new Date(d);x.setUTCDate(d.getUTCDate()+i);return iso(x)})}
 function openProf(id,back){S.pid=id;S.pBack=back||S.view;S.view='prof';render();scrollTo(0,0)}
 function profRing(p){const r=20,c=2*Math.PI*r,off=c*(1-Math.max(0,Math.min(1,p)));return `<svg viewBox="0 0 48 48" class="pf-ring" aria-hidden="true"><circle cx="24" cy="24" r="${r}" class="rt"/><circle cx="24" cy="24" r="${r}" class="rf" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/></svg>`}
+
+/* Touche personnelle du profil enseignant : salutation, journée, anniversaires, pensée du jour */
+const PENSEES=[['Il faut tout un village pour élever un enfant.','Proverbe africain'],['Ce que vous plantez aujourd’hui donnera de l’ombre demain.','racine.ia'],['Un seul doigt ne peut pas laver le visage : l’école et les parents avancent ensemble.','Proverbe africain'],['Un mot gentil le matin peut porter un élève toute la journée.','racine.ia'],['Petit à petit, l’oiseau fait son nid.','Proverbe'],['Le savoir est une richesse que personne ne peut voler.','Proverbe africain'],['L’appel du matin, c’est aussi dire à chaque enfant : je t’ai vu.','racine.ia'],['La patience a des racines amères, mais ses fruits sont doux.','Proverbe'],['Chaque élève avance à son rythme : votre patience fait la différence.','racine.ia'],['Celui qui instruit un enfant prépare l’avenir de tout un pays.','racine.ia'],['L’arbre tient debout grâce à ses racines.','Proverbe africain'],['Encourager un élève, c’est déjà lui apprendre quelque chose.','racine.ia']];
+const prenomDe=n=>{const w=String(n||'').trim().split(/\s+/);const x=w[w.length-1]||'';return x?x[0].toUpperCase()+x.slice(1).toLowerCase():''};
+function anniversaires(es){const n=new Date();const t0=Date.UTC(n.getFullYear(),n.getMonth(),n.getDate());
+  return es.filter(e=>e.dateNaissance&&/^\d{4}-\d{2}-\d{2}$/.test(e.dateNaissance)).map(e=>{const [y,m,d]=e.dateNaissance.split('-').map(Number);let t=Date.UTC(n.getFullYear(),m-1,d);if(t<t0)t=Date.UTC(n.getFullYear()+1,m-1,d);const j=Math.round((t-t0)/864e5);return{e,j,age:new Date(t).getUTCFullYear()-y,date:iso(new Date(t))}}).filter(x=>x.j<=6).sort((a,b)=>a.j-b.j)}
+function profHello(p,cid,es,mine){
+  const td=today();const now=new Date();const hr=now.getHours();const dd=D(td);const w=dd.getUTCDay();const we=w===0||w===6;
+  const salut=hr<12?'Bonjour':hr<18?'Bon après-midi':'Bonsoir';const pr=prenomDe(p.nom);
+  const a=S.appel[aid(cid,td)]?.p||{};const nM=Object.keys(a).filter(k=>es.some(e=>e.id===k)).length;const nA=Object.values(a).filter(x=>x==='A').length;
+  const t1=es.length>0&&nM>=es.length,t2=appelClos(cid,td);const done=(t1?1:0)+(t2?1:0);
+  const pz=PENSEES[(Math.floor(Date.UTC(now.getFullYear(),now.getMonth(),now.getDate())/864e5))%PENSEES.length];
+  const ann=anniversaires(es);const hasReg=regsOf(cid).some(r=>{const j=joursOuvres(r.debut);return td>=j[0]&&td<=j[29]});
+  const task=(ok,ttl,sub,v)=>`<button class="ph-task${ok?' ok':''}" data-act="popen" data-id="${h(cid)}" data-v="${v}"><span class="ph-chk">${ok?'✓':''}</span><span class="grow"><b>${ttl}</b><small>${sub}</small></span><span class="chev">${ic('chev',16)}</span></button>`;
+  const R=2*Math.PI*21,f=done/2;
+  return `<section class="ph-card">
+   <div class="ph-top"><div class="grow"><small>${h(JLONG[w])} ${h(dfr(td))}</small><h2>${mine?`${salut}${pr?', '+h(pr):''}`:`Sa journée`}</h2>${mine?`<p>${we?'C’est le week-end : reposez-vous bien, la classe reprend lundi.':done===2?`Tout est fait pour aujourd’hui. Merci${pr?', '+h(pr):''} !`:'Voici ce qui reste à faire aujourd’hui.'}</p>`:''}</div>
+    ${we||!es.length||!hasReg?'':`<div class="ph-ring" role="img" aria-label="${done} tâche${done>1?'s':''} sur 2"><svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="21" class="rt"/><circle cx="25" cy="25" r="21" class="rf" stroke-dasharray="${R}" stroke-dashoffset="${R*(1-f)}"/></svg><b class="num">${done}<small>/2</small></b></div>`}</div>
+   ${we?'':!es.length?`<div class="ph-tasks">${task(false,'Inscrire vos élèves','Aucun élève dans votre classe pour l’instant : commencez par les inscrire','eleves')}</div>`:!hasReg?`<div class="ph-tasks">${task(false,'Ouvrir le registre d’appel','Aucun registre ne couvre aujourd’hui : ouvrez-en un pour faire l’appel','appel')}</div>`:`<div class="ph-tasks">${task(t1,'Faire l’appel',t1?`${es.length-nA} présent${es.length-nA>1?'s':''} · ${nA} absent${nA>1?'s':''}`:nM?`${nM} / ${es.length} élèves marqués`:'Marquer P ou A pour chaque élève','appel')}${task(t2,'Clôturer la journée',t2?`Envoyé à la direction à ${hm(JR(cid,td).appel.at)}`:'Envoie l’appel et les cotes du jour à la direction','appel')}</div>`}
+   ${ann.length?`<div class="ph-ann">${ann.map(x=>`<button class="ph-bd${x.j===0?' today':''}" data-act="eleve" data-id="${h(x.e.id)}"><span class="ph-cake" aria-hidden="true">🎂</span><span class="grow"><b>${h(x.e.prenom||x.e.nom)} · ${x.age} ans</b><small>${x.j===0?`Anniversaire aujourd’hui ! Souhaitez-${x.e.sexe==='F'?'la':'le'} en classe.`:x.j===1?'Anniversaire demain':'Anniversaire '+h(JLONG[D(x.date).getUTCDay()].toLowerCase())+' '+h(dfr(x.date))}</small></span></button>`).join('')}</div>`:''}
+   <figure class="ph-quote"><blockquote>« ${h(pz[0])} »</blockquote><figcaption>Pensée du jour · ${h(pz[1])}</figcaption></figure>
+  </section>`;
+}
 function vProf(){
   const p=ensList().find(x=>x.id===S.pid);
   if(!p){S.view=isDir()?'gestion':'accueil';return screen()}
@@ -1614,6 +1661,7 @@ function vProf(){
     <div class="t-cut" aria-hidden="true"></div>
     ${isGest(p)?`<div class="t-stats num gs"><div><small>Fonction</small><b>${h(p.matiere||'Gestion')}</b></div><div><small>Matricule</small><b>${h(p.matricule||'—')}</b></div><div><small>Classes</small><b>${classIds().length}</b></div></div>`:`<div class="t-stats num"><div><small>Classe</small><b>${c?h(short(c.nom)):'—'}</b></div><div><small>Élèves</small><b>${es.length}</b></div><div><small>Garçons / Filles</small><b>${es.length-f} / ${f}</b></div></div>`}
    </section>
+   ${!isGest(p)&&c?profHello(p,cid,es,p.id===meId()||(S.demo&&S.demoRole==='ens')):''}
    ${!isGest(p)&&!c?`<div class="pf-card pf-empty">Aucune classe attribuée.${isDir()?` <button class="pf-btn" data-act="ens" data-id="${h(p.id)}">Attribuer une classe</button>`:''}</div>`:''}
    <section class="card summary pf-menu">${rows.join('')}</section>
    ${c?`<section class="pf-sec"><div class="pf-h"><b>Appel de la semaine</b><span class="num">${faits} / 5 jours clôturés</span></div>
@@ -1628,7 +1676,7 @@ function vProf(){
      <div class="pf-row"><span class="pf-day ic">${ic('doc',20)}</span><span class="grow"><b class="num">${p.matricule?h(p.matricule):'Non renseigné'}</b><small>Matricule</small></span></div>
      <div class="pf-row"><span class="pf-day ic">${ic('phone',20)}</span><span class="grow"><b>${p.tel?h(p.tel):'Non renseigné'}</b><small>Téléphone</small></span></div>
      <div class="pf-row"><span class="pf-day ic">${ic('chalk',20)}</span><span class="grow"><b>${h(p.matiere||'—')}</b><small>Fonction</small></span></div>
-     <div class="pf-row ${linked?'ok':''}"><span class="pf-day ic">${ic('shield',20)}</span><span class="grow"><b>${linked?'Compte relié':'Compte pas encore relié'}</b><small>${linked?'L’enseignant utilise l’application avec son compte.':'À sa première ouverture, il touche son nom pour utiliser ce profil.'}</small></span>${linked?'<span class="pf-chk">✓</span>':''}</div>
+     <div class="pf-row ${linked?'ok':''}"><span class="pf-day ic">${ic('shield',20)}</span><span class="grow"><b>${linked?'Compte relié':'Compte pas encore relié'}</b><small>${linked?'L’enseignant utilise l’application avec son compte.':'Il entre dans racine.ia avec le code de l’école et son code personnel à 4 chiffres.'}</small></span>${linked?'<span class="pf-chk">✓</span>':''}</div>
     </div></section>
    ${isDir()?`<button class="pf-main" data-act="ens" data-id="${h(p.id)}">Modifier le profil</button>`:''}
   </div>`);
