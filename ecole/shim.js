@@ -339,6 +339,17 @@
   #tpick .tp-ok{border:0;border-radius:16px;padding:15px;background:#fff;color:#111;font:700 16px Outfit,sans-serif;cursor:pointer}
   #tpick .tp-no{border:0;background:none;color:rgba(255,255,255,.75);font:600 14px Outfit,sans-serif;padding:8px;cursor:pointer}
   #tpick .tp-msg{min-height:18px;font-size:13.5px;color:#ffd7a8}
+  #sigfs{position:fixed;inset:0;z-index:2147483002;background:#fff;color:#111;display:flex;flex-direction:column;font-family:Outfit,system-ui,sans-serif;padding:calc(10px + env(safe-area-inset-top,0px)) 0 calc(10px + env(safe-area-inset-bottom,0px))}
+  #sigfs .sf-top{padding:8px 18px;display:flex;flex-direction:column;gap:2px}#sigfs .sf-top b{font-size:20px}#sigfs .sf-top span{font-size:13.5px;color:#666}
+  #sigfs canvas{flex:1;width:100%;min-height:0;touch-action:none;display:block;cursor:crosshair}
+  #sigfs .sf-line{position:absolute;left:24px;right:24px;bottom:calc(120px + env(safe-area-inset-bottom,0px));border-top:2px dashed #c9c9c9;pointer-events:none}
+  #sigfs .sf-bot{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 16px}
+  #sigfs .sf-bot button{border:0;border-radius:16px;padding:14px;font:700 15px Outfit,sans-serif;background:#eee;color:#111;cursor:pointer}
+  #sigfs .sf-ok{grid-column:1/-1;background:#111!important;color:#fff!important}
+  .sf-open{position:absolute;inset:0;border:0;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font:600 14.5px Outfit,sans-serif;color:#555}
+  .sf-open span{background:rgba(255,255,255,.92);border-radius:999px;padding:9px 14px;box-shadow:0 4px 14px rgba(0,0,0,.12)}
+  .sigpad.sf-done .sf-open span{font-size:12px;padding:5px 10px;position:absolute;right:8px;top:8px}
+  .sigpad.sf-done .sigline{display:none}
   .clr-acc{display:flex;align-items:center;gap:12px;margin:18px 0 6px;padding:14px 16px;border-radius:18px;background:var(--surface,#1a1033);border:1px solid var(--line,#2e1d55);color:var(--ink,#fff);font-family:var(--f-b,Outfit,sans-serif)}
   .clr-acc span{flex:1;min-width:0;font-size:14px;line-height:1.35}.clr-acc small{display:block;color:var(--muted,rgba(255,255,255,.7))}
   .clr-acc button{border:1px solid var(--line,#2e1d55);background:transparent;color:inherit;font:600 14px var(--f-b,Outfit,sans-serif);padding:10px 14px;border-radius:12px;cursor:pointer}`;
@@ -502,6 +513,43 @@
     histInit();
   });
 
+
+  /* ---------- Signature en plein écran (présence, parents, enseignants) ---------- */
+  function sigFull(pad) {
+    const small = pad.querySelector('canvas'); if (!small) return;
+    const ov = document.createElement('div'); ov.id = 'sigfs';
+    ov.innerHTML = `<div class="sf-top"><b>Signez ici avec le doigt</b><span>Utilisez toute la surface blanche</span></div><canvas></canvas><div class="sf-line"></div>
+      <div class="sf-bot"><button type="button" class="sf-c">Effacer</button><button type="button" class="sf-x">Annuler</button><button type="button" class="sf-ok">Valider la signature</button></div>`;
+    document.body.appendChild(ov);
+    const cv = ov.querySelector('canvas'); const dpr = Math.min(2, devicePixelRatio || 1);
+    const W = cv.clientWidth, H = cv.clientHeight; cv.width = W * dpr; cv.height = H * dpr;
+    const c = cv.getContext('2d'); c.scale(dpr, dpr); c.lineCap = 'round'; c.lineJoin = 'round'; c.strokeStyle = '#111'; c.lineWidth = 4.2;
+    let draw = false, last = null, ink = false, box = null;
+    const pos = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+    const grow = p => { box = box ? [Math.min(box[0], p[0]), Math.min(box[1], p[1]), Math.max(box[2], p[0]), Math.max(box[3], p[1])] : [p[0], p[1], p[0], p[1]]; };
+    cv.addEventListener('pointerdown', e => { e.preventDefault(); cv.setPointerCapture(e.pointerId); draw = true; last = pos(e); grow(last); c.beginPath(); c.arc(last[0], last[1], 2, 0, 6.283); c.fillStyle = '#111'; c.fill(); ink = true; });
+    cv.addEventListener('pointermove', e => { if (!draw) return; const p = pos(e); c.beginPath(); c.moveTo(last[0], last[1]); c.lineTo(p[0], p[1]); c.stroke(); last = p; grow(p); });
+    const up = () => { draw = false; }; cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+    ov.querySelector('.sf-c').onclick = () => { c.clearRect(0, 0, W, H); ink = false; box = null; };
+    ov.querySelector('.sf-x').onclick = () => ov.remove();
+    ov.querySelector('.sf-ok').onclick = () => {
+      if (!ink) { ov.querySelector('.sf-top span').textContent = 'Signez d’abord dans la zone blanche.'; return; }
+      const pad0 = 12, bx = Math.max(0, box[0] - pad0), by = Math.max(0, box[1] - pad0), bw = Math.min(W, box[2] + pad0) - bx, bh = Math.min(H, box[3] + pad0) - by;
+      const sc = small.getContext('2d'); sc.save(); sc.setTransform(1, 0, 0, 1, 0, 0); sc.clearRect(0, 0, small.width, small.height);
+      const k = Math.min(small.width * .92 / bw, small.height * .8 / bh); const dw = bw * k, dh = bh * k;
+      sc.drawImage(cv, bx * dpr, by * dpr, bw * dpr, bh * dpr, (small.width - dw) / 2, (small.height - dh) / 2, dw, dh); sc.restore();
+      small.dataset.ink = '1'; pad.classList.add('sf-done'); const lb = pad.querySelector('.sf-open span'); if (lb) lb.textContent = '✍️ Refaire la signature'; ov.remove();
+    };
+  }
+  function sigWatch() {
+    document.querySelectorAll('.sigpad:not([data-fs])').forEach(pad => {
+      pad.dataset.fs = '1';
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'sf-open';
+      b.innerHTML = '<span>✍️ Touchez pour signer en plein écran</span>';
+      b.onclick = () => sigFull(pad); pad.appendChild(b);
+    });
+  }
+  new MutationObserver(() => sigWatch()).observe(document.documentElement, { childList: true, subtree: true });
   /* ---------- Bouton retour du téléphone : revenir à l'écran précédent ---------- */
   const HK = ['view', 'cid', 'ctab', 'pid', 'pBack', 'pTab', 'aVue', 'pDate'];
   let overlay = null, restoring = false;
